@@ -217,7 +217,7 @@ class _IPhoneShellState extends State<IPhoneShell> {
                         'ផលិតផល',
                         'បន្ថែម',
                       ][index],
-                      child: widget.pages[index],
+                      child: widget.pages[index + 2],
                     ),
             ),
           ),
