@@ -308,6 +308,14 @@ void main() {
               roomCount: 1,
               zones: [
                 PvcQuantityZone(
+                  id: 2,
+                  name: 'K PVC zone',
+                  product: product('K 3m'),
+                  inputMode: PvcZoneInputMode.dimensions,
+                  lengthM: 6,
+                  widthM: 4.2,
+                ),
+                PvcQuantityZone(
                   id: 1,
                   name: 'Clip zone',
                   product: clip,
@@ -318,7 +326,9 @@ void main() {
           ],
         );
 
-        final clips = result.products.single;
+        final clips = result.products.singleWhere(
+          (item) => item.product.id == clip.id,
+        );
         expect(clips.requiredLinearM, closeTo(20.4, 0.0001));
         expect(clips.quantity, 41);
         expect(clips.unitLabel, 'គ្រាប់');
@@ -367,51 +377,114 @@ void main() {
       },
     );
 
-    test(
-      'calculates C-Line pieces and full boxes from actual room layout',
-      () async {
-        Future<PvcProductQuantityResult> calculate(
-          double length,
-          double width,
-        ) async {
-          final result = await service.calculate(
-            groups: [
-              PvcMeasurementGroup(
+    test('calculates C-Line pieces and full boxes from total area', () async {
+      Future<PvcProductQuantityResult> calculate(
+        double length,
+        double width,
+      ) async {
+        final result = await service.calculate(
+          groups: [
+            PvcMeasurementGroup(
+              id: 1,
+              name: 'Area 1',
+              inputMode: PvcGroupInputMode.dimensions,
+              lengthM: length,
+              widthM: width,
+              roomCount: 1,
+              zones: [
+                PvcQuantityZone(
+                  id: 1,
+                  name: 'C-Line zone',
+                  product: product('C.Line 0.23 x 4m'),
+                  inputMode: PvcZoneInputMode.perimeterStrip,
+                ),
+              ],
+            ),
+          ],
+        );
+        return result.products.single;
+      }
+
+      final fourByFour = await calculate(4, 4);
+      expect(fourByFour.requiredLinearM, 16);
+      expect(fourByFour.quantity, 20);
+      expect(fourByFour.unitLabel, 'ដើម');
+      expect(fourByFour.requiredPackages, 1);
+      expect(fourByFour.loosePieces, 0);
+      expect(fourByFour.billableQuantity, 1);
+
+      final fortyOneByForty = await calculate(41, 40);
+      expect(fortyOneByForty.requiredLinearM, 162);
+      expect(fortyOneByForty.quantity, 2060);
+      expect(fortyOneByForty.requiredPackages, 103);
+      expect(fortyOneByForty.loosePieces, 0);
+      expect(fortyOneByForty.billableQuantity, 103);
+    });
+
+    test('uses two C-Line boxes for a 24m² room', () async {
+      final result = await service.calculate(
+        groups: [
+          PvcMeasurementGroup(
+            id: 1,
+            name: 'Area 1',
+            inputMode: PvcGroupInputMode.dimensions,
+            lengthM: 4,
+            widthM: 6,
+            roomCount: 1,
+            zones: [
+              PvcQuantityZone(
                 id: 1,
-                name: 'Area 1',
-                inputMode: PvcGroupInputMode.dimensions,
-                lengthM: length,
-                widthM: width,
-                roomCount: 1,
-                zones: [
-                  PvcQuantityZone(
-                    id: 1,
-                    name: 'C-Line zone',
-                    product: product('C.Line 0.23 x 4m'),
-                    inputMode: PvcZoneInputMode.perimeterStrip,
-                  ),
-                ],
+                name: 'C-Line zone',
+                product: product('C.Line 0.23 x 4m'),
+                inputMode: PvcZoneInputMode.perimeterStrip,
               ),
             ],
-          );
-          return result.products.single;
-        }
+          ),
+        ],
+      );
 
-        final fourByFour = await calculate(4, 4);
-        expect(fourByFour.requiredLinearM, 16);
-        expect(fourByFour.quantity, 4);
-        expect(fourByFour.requiredPackages, 1);
-        expect(fourByFour.loosePieces, 4);
-        expect(fourByFour.billableQuantity, 1);
+      final cLine = result.products.single;
+      expect(cLine.quantity, 40);
+      expect(cLine.requiredPackages, 2);
+      expect(cLine.billableQuantity, 2);
+    });
 
-        final fortyOneByForty = await calculate(41, 40);
-        expect(fortyOneByForty.requiredLinearM, 162);
-        expect(fortyOneByForty.quantity, 41);
-        expect(fortyOneByForty.requiredPackages, 3);
-        expect(fortyOneByForty.loosePieces, 1);
-        expect(fortyOneByForty.billableQuantity, 3);
-      },
-    );
+    test('does not require clips for non-K/P PVC', () async {
+      final result = await service.calculate(
+        groups: [
+          PvcMeasurementGroup(
+            id: 1,
+            name: 'Area 1',
+            inputMode: PvcGroupInputMode.dimensions,
+            lengthM: 6,
+            widthM: 4.2,
+            roomCount: 1,
+            zones: [
+              PvcQuantityZone(
+                id: 1,
+                name: 'Clip zone',
+                product: clip,
+                inputMode: PvcZoneInputMode.perimeterStrip,
+              ),
+              PvcQuantityZone(
+                id: 2,
+                name: '4-light PVC',
+                product: product('4ភ្លឺធំ'),
+                inputMode: PvcZoneInputMode.dimensions,
+                lengthM: 6,
+                widthM: 4.2,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final clips = result.products.singleWhere(
+        (item) => item.product.id == clip.id,
+      );
+      expect(clips.quantity, 0);
+      expect(clips.notices.single, contains('K and P'));
+    });
 
     test('clip manual lengths recalculate pieces and packets', () async {
       Future<PvcProductQuantityResult> calculate(double length) async {
@@ -426,6 +499,14 @@ void main() {
               roomCount: 1,
               zones: [
                 PvcQuantityZone(
+                  id: 2,
+                  name: 'K PVC zone',
+                  product: product('K 3m'),
+                  inputMode: PvcZoneInputMode.dimensions,
+                  lengthM: 6,
+                  widthM: 4.2,
+                ),
+                PvcQuantityZone(
                   id: 1,
                   name: 'Clip zone',
                   product: clip,
@@ -437,7 +518,9 @@ void main() {
             ),
           ],
         );
-        return result.products.single;
+        return result.products.singleWhere(
+          (item) => item.product.id == clip.id,
+        );
       }
 
       final eighteenMeters = await calculate(18);
@@ -565,7 +648,7 @@ void main() {
         expect(_quantity(result, 'K 3m'), 9);
         expect(_quantity(result, 'P 4m'), 7);
         expect(_quantity(result, 'ជ្រី V'), 6);
-        expect(_quantity(result, 'C.Line 0.23 x 4m'), 5);
+        expect(_quantity(result, 'C.Line 0.23 x 4m'), 40);
         expect(result.zoneResults.first.assignedAreaM2, closeTo(10.8, 0.0001));
         expect(result.zoneResults.first.requiredLinearM, 18);
       },
@@ -593,7 +676,7 @@ void main() {
       expect(result.zoneResults.first.assignedAreaM2, closeTo(216, 0.0001));
       expect(result.zoneResults.first.requiredLinearM, 360);
       expect(_quantity(result, '4ភ្លឺធំ'), 460);
-      expect(_quantity(result, 'C.Line 0.23 x 4m'), 100);
+      expect(_quantity(result, 'C.Line 0.23 x 4m'), 500);
     });
 
     test('uses area mode for 100m² of P 4m without fake dimensions', () async {
@@ -665,7 +748,7 @@ void main() {
         ],
       );
 
-      expect(_quantity(result, 'C.Line 0.23 x 4m'), 5);
+      expect(_quantity(result, 'C.Line 0.23 x 4m'), 40);
       expect(_quantity(result, 'កាវ'), 3);
     });
 

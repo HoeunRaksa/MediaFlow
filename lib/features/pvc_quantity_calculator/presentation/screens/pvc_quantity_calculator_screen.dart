@@ -197,119 +197,125 @@ class _PvcQuantityCalculatorScreenState
     final group = _activeGroup;
     final model = group.toModel();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _compactPvcCard(
-          title: 'ទំហំ PVC',
-          child: _GroupEditorCard(
-            group: group,
-            groupNumber: _activeGroupIndex + 1,
-            compact: true,
-            canDelete: _groups.length > 1,
-            onChanged: _workspaceChanged,
-            onModeChanged: (mode) {
-              setState(() {
-                group.mode = mode;
-                _syncAutoAccessoryLengths(group);
-              });
-              _scheduleCalculation();
-            },
-            onDelete: () => _removeGroup(_activeGroupIndex),
+    return SingleChildScrollView(
+      key: ValueKey('pvc-compact-scroll'),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom + 16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _compactPvcCard(
+            title: 'ទំហំ PVC',
+            child: _GroupEditorCard(
+              group: group,
+              groupNumber: _activeGroupIndex + 1,
+              compact: true,
+              canDelete: _groups.length > 1,
+              onChanged: _workspaceChanged,
+              onModeChanged: (mode) {
+                setState(() {
+                  group.mode = mode;
+                  _syncAutoAccessoryLengths(group);
+                });
+                _scheduleCalculation();
+              },
+              onDelete: () => _removeGroup(_activeGroupIndex),
+            ),
           ),
-        ),
-        SizedBox(height: 8),
-        _compactPvcCard(
-          title: hasAreaEstimate
-              ? 'សរុប និងតម្លៃ · ប៉ាន់ស្មាន'
-              : 'សរុប និងតម្លៃ',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _WorkspaceTotals(
-                totalArea: model.totalAreaM2,
-                allocatedArea: model.allocatedAreaM2,
-              ),
-              SizedBox(height: 8),
-              if (notices.isNotEmpty)
-                Container(
-                  margin: EdgeInsets.only(bottom: 7),
-                  padding: EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: iPhoneColor(context, AppColors.warningBg),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    notices.join(' • '),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: iPhoneColor(context, AppColors.warningText),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+          SizedBox(height: 8),
+          _compactPvcCard(
+            title: hasAreaEstimate
+                ? 'សរុប និងតម្លៃ · ប៉ាន់ស្មាន'
+                : 'សរុប និងតម្លៃ',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _WorkspaceTotals(
+                  totalArea: model.totalAreaM2,
+                  allocatedArea: model.allocatedAreaM2,
+                ),
+                SizedBox(height: 8),
+                if (notices.isNotEmpty)
+                  Container(
+                    margin: EdgeInsets.only(bottom: 7),
+                    padding: EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: iPhoneColor(context, AppColors.warningBg),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      notices.join(' • '),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: iPhoneColor(context, AppColors.warningText),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-              if (products.isEmpty)
+                if (products.isEmpty)
+                  Text(
+                    notices.isEmpty
+                        ? 'សូមបន្ថែមសម្ភារៈក្នុងការកំណត់បន្ថែម'
+                        : 'មិនទាន់មានសម្ភារៈដែលអាចគណនា',
+                    style: TextStyle(
+                      color: iPhoneColor(context, AppColors.textMuted),
+                      fontSize: 12,
+                    ),
+                  )
+                else
+                  for (final item in products) ...[
+                    _compactPvcPriceRow(item),
+                    SizedBox(height: 6),
+                  ],
+                _compactPvcTotal(grandTotal),
+              ],
+            ),
+          ),
+          SizedBox(height: 8),
+          _compactPvcCard(
+            title: 'សម្រង់តម្លៃ',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 Text(
-                  notices.isEmpty
-                      ? 'សូមបន្ថែមសម្ភារៈក្នុងការកំណត់បន្ថែម'
-                      : 'មិនទាន់មានសម្ភារៈដែលអាចគណនា',
+                  quotation,
+                  key: ValueKey('mobile-pvc-quotation'),
                   style: TextStyle(
-                    color: iPhoneColor(context, AppColors.textMuted),
-                    fontSize: 12,
+                    color: iPhoneColor(context, AppColors.textMain),
+                    fontSize: 12.5,
+                    height: 1.45,
                   ),
-                )
-              else
-                for (final item in products) ...[
-                  _compactPvcPriceRow(item),
-                  SizedBox(height: 6),
-                ],
-              _compactPvcTotal(grandTotal),
-            ],
-          ),
-        ),
-        SizedBox(height: 8),
-        _compactPvcCard(
-          title: 'សម្រង់តម្លៃ',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                quotation,
-                key: ValueKey('mobile-pvc-quotation'),
-                style: TextStyle(
-                  color: iPhoneColor(context, AppColors.textMain),
-                  fontSize: 12.5,
-                  height: 1.45,
                 ),
-              ),
-              SizedBox(height: 10),
-              FilledButton.icon(
-                key: ValueKey('mobile-pvc-quick-quote-copy'),
-                onPressed: () => _copyQuotation(quotation),
-                icon: Icon(Icons.copy_rounded, size: 18),
-                label: Text('ចម្លងសម្រង់តម្លៃ'),
-              ),
+                SizedBox(height: 10),
+                FilledButton.icon(
+                  key: ValueKey('mobile-pvc-quick-quote-copy'),
+                  onPressed: () => _copyQuotation(quotation),
+                  icon: Icon(Icons.copy_rounded, size: 18),
+                  label: Text('ចម្លងសម្រង់តម្លៃ'),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 4),
+          ExpansionTile(
+            tilePadding: EdgeInsets.symmetric(horizontal: 4),
+            childrenPadding: EdgeInsets.zero,
+            title: Text(
+              'ការកំណត់បន្ថែម',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+            ),
+            children: [
+              SizedBox(height: 520, child: _productsPanel()),
+              SizedBox(height: 600, child: _resultsPanel()),
             ],
           ),
-        ),
-        SizedBox(height: 4),
-        ExpansionTile(
-          tilePadding: EdgeInsets.symmetric(horizontal: 4),
-          childrenPadding: EdgeInsets.zero,
-          title: Text(
-            'ការកំណត់បន្ថែម',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-          ),
-          children: [
-            SizedBox(height: 520, child: _productsPanel()),
-            SizedBox(height: 600, child: _resultsPanel()),
-          ],
-        ),
-        SizedBox(height: 8),
-        const PvcReplyGenerator(compactMobile: true),
-      ],
+          SizedBox(height: 8),
+          const PvcReplyGenerator(compactMobile: true),
+        ],
+      ),
     );
   }
 
@@ -375,6 +381,23 @@ class _PvcQuantityCalculatorScreenState
             MoneyFormatter.money(item.billableQuantity * price),
             textAlign: TextAlign.right,
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+          ),
+        ),
+        SizedBox(width: 2),
+        SizedBox(
+          width: 32,
+          height: 44,
+          child: IconButton(
+            key: ValueKey('pvc-remove-product-${item.product.id}'),
+            tooltip: 'Remove material',
+            onPressed: () => _removeProduct(item.product.id),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            icon: Icon(
+              Icons.close_rounded,
+              size: 18,
+              color: iPhoneColor(context, AppColors.errorText),
+            ),
           ),
         ),
       ],
@@ -721,6 +744,7 @@ class _PvcQuantityCalculatorScreenState
                       return _ProductResultCard(
                         result: item,
                         priceController: _priceControllerFor(item.product.id),
+                        onRemove: () => _removeProduct(item.product.id),
                       );
                     },
                   ),
@@ -816,6 +840,21 @@ class _PvcQuantityCalculatorScreenState
       _reconcileAutomaticFill(_activeGroup);
     });
     zone.dispose();
+    _scheduleCalculation(immediate: true);
+  }
+
+  void _removeProduct(String productId) {
+    final removed = <_EditableZone>[];
+    for (final group in _groups) {
+      removed.addAll(group.zones.where((zone) => zone.product.id == productId));
+      group.zones.removeWhere((zone) => zone.product.id == productId);
+      _reconcileAutomaticFill(group);
+    }
+    if (removed.isEmpty) return;
+    for (final zone in removed) {
+      zone.dispose();
+    }
+    setState(() {});
     _scheduleCalculation(immediate: true);
   }
 
@@ -1538,6 +1577,7 @@ class _ZoneCard extends StatelessWidget {
                     icon: Icon(Icons.more_horiz_rounded, size: 20),
                   ),
                 IconButton(
+                  key: ValueKey('pvc-remove-zone-${zone.id}'),
                   tooltip: 'Remove zone',
                   onPressed: onDelete,
                   visualDensity: VisualDensity.compact,
@@ -2087,10 +2127,12 @@ class _ProductResultCard extends StatelessWidget {
   const _ProductResultCard({
     required this.result,
     required this.priceController,
+    required this.onRemove,
   });
 
   final PvcProductQuantityResult result;
   final TextEditingController priceController;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -2145,6 +2187,19 @@ class _ProductResultCard extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 8),
+              IconButton(
+                key: ValueKey('pvc-remove-result-${result.product.id}'),
+                tooltip: 'Remove material',
+                onPressed: onRemove,
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.close_rounded,
+                  size: 19,
+                  color: iPhoneColor(context, AppColors.errorText),
+                ),
+              ),
+              SizedBox(width: 4),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [

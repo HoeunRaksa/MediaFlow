@@ -234,6 +234,9 @@ class PvcQuantityCalculationService {
     double assignedAreaPerRoom,
     double requiredLinearPerRoom,
   ) async {
+    if (zone.product.category == PvcProductCategory.cLine) {
+      return _autoCLine(group, zone, assignedArea, requiredLinear);
+    }
     return switch (zone.product.calculationUnit) {
       PvcProductCalculationUnit.area => _autoArea(
         group,
@@ -262,6 +265,38 @@ class PvcQuantityCalculationService {
         notice: 'This material has no physical coverage. Set manual quantity.',
       ),
     };
+  }
+
+  PvcZoneQuantityResult _autoCLine(
+    PvcMeasurementGroup group,
+    PvcQuantityZone zone,
+    double assignedArea,
+    double requiredLinear,
+  ) {
+    final totalArea = group.totalAreaM2;
+    final piecesPerBox = zone.product.piecesPerPackage ?? 20;
+    const physicalUnitLabel = 'ដើម';
+    if (totalArea <= 0 || piecesPerBox <= 0) {
+      return _result(
+        group,
+        zone,
+        unitLabel: physicalUnitLabel,
+        assignedArea: assignedArea,
+        requiredLinear: requiredLinear,
+        method: '16 m² per box · area estimate',
+        notice: 'Enter room dimensions or total area greater than 0.',
+      );
+    }
+    final boxes = (totalArea / 16 - 1e-9).ceil();
+    return _result(
+      group,
+      zone,
+      quantity: boxes * piecesPerBox,
+      unitLabel: physicalUnitLabel,
+      assignedArea: totalArea,
+      requiredLinear: requiredLinear,
+      method: '16 m² per box · area estimate',
+    );
   }
 
   Future<PvcZoneQuantityResult> _autoArea(
@@ -401,6 +436,17 @@ class PvcQuantityCalculationService {
   ) {
     final packaging = zone.product.perMeterPackaging;
     if (packaging != null) {
+      if (!_clipAppliesToGroup(group)) {
+        return _result(
+          group,
+          zone,
+          unitLabel: unitLabel,
+          assignedArea: assignedArea,
+          requiredLinear: requiredLinear,
+          method: 'Only for K / P PVC',
+          notice: 'Clips are only required for K and P PVC panels.',
+        );
+      }
       if (requiredLinear <= 0) {
         return _result(
           group,
@@ -446,6 +492,12 @@ class PvcQuantityCalculationService {
       method: '${_number(pieceLength)} m per piece',
     );
   }
+
+  bool _clipAppliesToGroup(PvcMeasurementGroup group) => group.zones.any(
+    (zone) =>
+        zone.product.calculationUnit == PvcProductCalculationUnit.area &&
+        const {'K', 'P'}.contains(zone.product.family.trim().toUpperCase()),
+  );
 
   PvcZoneQuantityResult _result(
     PvcMeasurementGroup group,

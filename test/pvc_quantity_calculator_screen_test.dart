@@ -38,6 +38,64 @@ void main() {
   });
 
   testWidgets(
+    'selected materials can be removed from results and compact quote',
+    (tester) async {
+      await _pump(tester, products: products);
+      await tester.tap(
+        find.byKey(const ValueKey('pvc-add-product-pvc_k_3000')),
+      );
+      await tester.pump(const Duration(milliseconds: 140));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('pvc-remove-result-pvc_k_3000')),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('pvc-remove-result-pvc_k_3000')),
+      );
+      await tester.pump(const Duration(milliseconds: 140));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('pvc-result-pvc_k_3000')), findsNothing);
+
+      await _pump(
+        tester,
+        products: products,
+        size: const Size(430, 900),
+        compactMobile: true,
+      );
+      await tester.tap(find.text('ការកំណត់បន្ថែម'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('pvc-add-product-pvc_k_3000')),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('pvc-add-product-pvc_k_3000')),
+      );
+      await tester.pump(const Duration(milliseconds: 140));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('pvc-remove-product-pvc_k_3000')),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('pvc-remove-product-pvc_k_3000')),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('pvc-remove-product-pvc_k_3000')),
+      );
+      await tester.pump(const Duration(milliseconds: 140));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('pvc-remove-product-pvc_k_3000')),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'PVC temporary selling price calculates line total and grand total in real-time',
     (tester) async {
       await _pump(tester, products: products);
@@ -237,6 +295,15 @@ void main() {
       await _pump(tester, products: products);
       await tester.enterText(
         find.byKey(const ValueKey('pvc-product-search')),
+        'K 3m',
+      );
+      await tester.pump();
+      await tester.tap(
+        find.byKey(const ValueKey('pvc-add-product-pvc_k_3000')),
+      );
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const ValueKey('pvc-product-search')),
         '100គ្រាប់',
       );
       await tester.pump();
@@ -246,10 +313,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 140));
       await tester.pumpAndSettle();
 
-      expect(_field('pvc-zone-required-length-1'), findsOneWidget);
+      expect(_field('pvc-zone-required-length-2'), findsOneWidget);
       expect(
         tester
-            .widget<TextField>(_field('pvc-zone-required-length-1'))
+            .widget<TextField>(_field('pvc-zone-required-length-2'))
             .controller
             ?.text,
         '20.4',
@@ -260,20 +327,20 @@ void main() {
       expect(_resultQuantity(tester, 'pvc_image1_row16'), '41');
       expect(find.text('Required: 20.4 m'), findsOneWidget);
       expect(find.text('1 កញ្ចប់'), findsWidgets);
-      expect(find.byKey(const ValueKey('pvc-zone-mode-area-1')), findsNothing);
-      expect(find.byKey(const ValueKey('pvc-zone-settings-1')), findsNothing);
+      expect(find.byKey(const ValueKey('pvc-zone-mode-area-2')), findsNothing);
+      expect(find.byKey(const ValueKey('pvc-zone-settings-2')), findsNothing);
       expect(
-        find.byKey(const ValueKey('pvc-zone-auto-length-1')),
+        find.byKey(const ValueKey('pvc-zone-auto-length-2')),
         findsNothing,
       );
 
-      await tester.enterText(_field('pvc-zone-required-length-1'), '60');
+      await tester.enterText(_field('pvc-zone-required-length-2'), '60');
       await tester.pump(const Duration(milliseconds: 140));
       await tester.pumpAndSettle();
       expect(_resultQuantity(tester, 'pvc_image1_row16'), '120');
       expect(find.text('= 2 កញ្ចប់'), findsOneWidget);
       expect(
-        find.byKey(const ValueKey('pvc-zone-auto-length-1')),
+        find.byKey(const ValueKey('pvc-zone-auto-length-2')),
         findsOneWidget,
       );
 
@@ -283,18 +350,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<TextField>(_field('pvc-zone-required-length-1'))
+            .widget<TextField>(_field('pvc-zone-required-length-2'))
             .controller
             ?.text,
         '60',
       );
       expect(_resultQuantity(tester, 'pvc_image1_row16'), '120');
 
-      await tester.tap(find.byKey(const ValueKey('pvc-zone-auto-length-1')));
+      await tester.tap(find.byKey(const ValueKey('pvc-zone-auto-length-2')));
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<TextField>(_field('pvc-zone-required-length-1'))
+            .widget<TextField>(_field('pvc-zone-required-length-2'))
             .controller
             ?.text,
         '18',
@@ -308,7 +375,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<TextField>(_field('pvc-zone-required-length-1'))
+            .widget<TextField>(_field('pvc-zone-required-length-2'))
             .controller
             ?.text,
         '20.4',
@@ -593,6 +660,7 @@ Future<void> _pump(
   WidgetTester tester, {
   required List products,
   Size size = const Size(1600, 900),
+  bool compactMobile = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -605,6 +673,7 @@ Future<void> _pump(
         body: PvcQuantityCalculatorScreen(
           products: products.cast(),
           optimizer: _WidgetOptimizer(),
+          compactMobile: compactMobile,
         ),
       ),
     ),
