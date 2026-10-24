@@ -226,7 +226,7 @@ class _IPhoneShellState extends State<IPhoneShell> {
                       title: [
                         'គណនាពិដាន',
                         'គណនា PVC',
-                        'គណនា / លក់',
+                        'Facebook Reply',
                         'ផលិតផល',
                         'បន្ថែម',
                       ][index],

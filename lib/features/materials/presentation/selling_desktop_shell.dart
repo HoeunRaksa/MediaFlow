@@ -85,15 +85,16 @@ class _SellingDesktopShellState extends State<SellingDesktopShell> {
       return IPhoneShell(
         initialIndex: switch (widget.initialDestination) {
           SaleDestination.pvc => 1,
-          SaleDestination.workspace => 2,
+          SaleDestination.workspace => 4,
           SaleDestination.products => 3,
           SaleDestination.appSettings => 4,
+          SaleDestination.facebookReply => 2,
           _ => 0,
         },
         pages: [
           _body(SaleDestination.ceiling),
           _body(SaleDestination.pvc),
-          _body(SaleDestination.workspace),
+          const FacebookCommentReplyPage(),
           _body(SaleDestination.products),
           IPhoneMenu(
             entries: [
