@@ -17,6 +17,7 @@ import '../../../measurement_calculator/native/measurement_native_api.dart';
 import '../../data/pvc_physical_catalog.dart';
 import '../../domain/pvc_quantity_calculation_service.dart';
 import '../../domain/pvc_quantity_models.dart';
+import '../widgets/pvc_reply_generator.dart';
 
 class PvcQuantityCalculatorScreen extends StatefulWidget {
   const PvcQuantityCalculatorScreen({
@@ -157,6 +158,7 @@ class _PvcQuantityCalculatorScreenState
         continuous: true,
         mobilePanelHeights: const [600, 520, 600],
         panels: [_measurementPanel(), _productsPanel(), _resultsPanel()],
+        footer: const PvcReplyGenerator(compactMobile: true),
       );
     }
     return LayoutBuilder(
@@ -167,6 +169,10 @@ class _PvcQuantityCalculatorScreenState
             SizedBox(
               height: constraints.maxHeight < 660 ? 660 : constraints.maxHeight,
               child: _buildWorkspace(),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
+              child: PvcReplyGenerator(),
             ),
           ],
         ),
@@ -301,6 +307,8 @@ class _PvcQuantityCalculatorScreenState
             SizedBox(height: 600, child: _resultsPanel()),
           ],
         ),
+        SizedBox(height: 8),
+        const PvcReplyGenerator(compactMobile: true),
       ],
     );
   }
