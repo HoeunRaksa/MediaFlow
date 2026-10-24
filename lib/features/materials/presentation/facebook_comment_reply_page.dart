@@ -55,8 +55,12 @@ class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
     } else {
       final products = const PvcPhysicalCatalog().build(state.materials);
       final zones = products.map((p) => PvcQuantityZone(id: p.sortOrder, name: p.nameKhmer, product: p, inputMode: p.isLinearAccessory ? PvcZoneInputMode.perimeterStrip : PvcZoneInputMode.dimensions, lengthM: l, widthM: w, stripWidthM: p.widthMm == null ? null : p.widthMm! / 1000)).toList();
-      final result = await PvcQuantityCalculationService().calculate(groups: [PvcMeasurementGroup(id: 1, name: 'Facebook', inputMode: PvcGroupInputMode.dimensions, roomCount: n, lengthM: l, widthM: w, zones: zones)]);
-      _lines = [for (final row in result.products) '${row.product.nameKhmer}: ${row.quantity} ${row.unitLabel}'];
+      try {
+        final result = await PvcQuantityCalculationService().calculate(groups: [PvcMeasurementGroup(id: 1, name: 'Facebook', inputMode: PvcGroupInputMode.dimensions, roomCount: n, lengthM: l, widthM: w, zones: zones)]);
+        _lines = [for (final row in result.products) '${row.product.nameKhmer}: ${row.quantity} ${row.unitLabel}'];
+      } on UnsupportedError {
+        _lines = const ['PVC exact cutting layout is available in the native calculator.'];
+      }
     }
     if (mounted) setState(() {});
   }
