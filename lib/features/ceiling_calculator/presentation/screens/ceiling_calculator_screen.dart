@@ -282,6 +282,7 @@ class _CeilingCalculatorScreenState extends State<CeilingCalculatorScreen> {
           if (isIPhoneLayout(context)) {
             return IPhoneWorkspace(
               continuous: true,
+              mobilePanelHeights: const [500, 520, 600],
               panels: [
                 _measurementPanel(),
                 _productsPanel(state, products),
@@ -530,39 +531,41 @@ class _CeilingCalculatorScreenState extends State<CeilingCalculatorScreen> {
               ],
             ),
           ),
-          Spacer(),
-          SizedBox(
-            height: isIPhoneLayout(context) ? 44 : 42,
-            child: AdaptiveActionButton.filledIcon(
-              key: ValueKey('ceiling-add-room-group'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: iPhoneColor(
-                  context,
-                  AppColors.buttonSecondaryBg,
-                ),
-                foregroundColor: iPhoneColor(
-                  context,
-                  AppColors.buttonSecondaryText,
-                ),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                    color: iPhoneColor(
-                      context,
-                      AppColors.buttonSecondaryBorder,
+          if (!isIPhoneLayout(context)) ...[
+            Spacer(),
+            SizedBox(
+              height: 42,
+              child: AdaptiveActionButton.filledIcon(
+                key: ValueKey('ceiling-add-room-group'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: iPhoneColor(
+                    context,
+                    AppColors.buttonSecondaryBg,
+                  ),
+                  foregroundColor: iPhoneColor(
+                    context,
+                    AppColors.buttonSecondaryText,
+                  ),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: iPhoneColor(
+                        context,
+                        AppColors.buttonSecondaryBorder,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              onPressed: () => _addGroup(),
-              icon: Icon(Icons.add_rounded, size: 18),
-              label: Text(
-                '+ បន្ថែមបន្ទប់ផ្សេង',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                onPressed: () => _addGroup(),
+                icon: Icon(Icons.add_rounded, size: 18),
+                label: Text(
+                  '+ បន្ថែមបន្ទប់ផ្សេង',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

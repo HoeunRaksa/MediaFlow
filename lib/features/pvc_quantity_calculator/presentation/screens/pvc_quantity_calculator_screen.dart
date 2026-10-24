@@ -110,6 +110,7 @@ class _PvcQuantityCalculatorScreenState
     if (isIPhoneLayout(context)) {
       return IPhoneWorkspace(
         continuous: true,
+        mobilePanelHeights: const [600, 520, 600],
         panels: [_measurementPanel(), _productsPanel(), _resultsPanel()],
       );
     }

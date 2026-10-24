@@ -113,6 +113,7 @@ class _MeasurementCalculatorScreenState
             return IPhoneWorkspace(
               panels: [_measurementPanel(), _productsPanel(), _resultPanel()],
               continuous: true,
+              mobilePanelHeights: const [500, 520, 600],
               tabLabels: [
                 'បន្ទប់',
                 'សម្ភារៈ (${_workspace.selections.length})',
@@ -318,13 +319,15 @@ class _MeasurementCalculatorScreenState
               emphasized: true,
             ),
           ),
-          Spacer(),
-          AdaptiveActionButton.outlinedIcon(
-            key: ValueKey('workspace-add-room-group'),
-            onPressed: _addGroup,
-            icon: Icon(Icons.add_rounded, size: 18),
-            label: Text('បន្ថែមទំហំផ្សេង'),
-          ),
+          if (!isIPhoneLayout(context)) ...[
+            Spacer(),
+            AdaptiveActionButton.outlinedIcon(
+              key: ValueKey('workspace-add-room-group'),
+              onPressed: _addGroup,
+              icon: Icon(Icons.add_rounded, size: 18),
+              label: Text('បន្ថែមទំហំផ្សេង'),
+            ),
+          ],
         ],
       ),
     );

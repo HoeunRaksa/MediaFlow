@@ -198,8 +198,14 @@ class _IPhoneShellState extends State<IPhoneShell> {
                   icon: Icon(CupertinoIcons.bubble_left_bubble_right),
                   label: 'ពិដាន',
                 ),
-                BottomNavigationBarItem(icon: Icon(CupertinoIcons.layers), label: 'PVC'),
-                BottomNavigationBarItem(icon: Icon(CupertinoIcons.cube_box), label: 'ផលិតផល'),
+                BottomNavigationBarItem(
+                  icon: Icon(CupertinoIcons.layers),
+                  label: 'PVC',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(CupertinoIcons.cube_box),
+                  label: 'ផលិតផល',
+                ),
                 BottomNavigationBarItem(
                   icon: Icon(CupertinoIcons.ellipsis_circle),
                   label: 'បន្ថែម',
@@ -260,11 +266,17 @@ class IPhoneWorkspace extends StatefulWidget {
     this.footer,
     this.tabLabels,
     this.continuous = false,
+    this.mobilePanelHeights,
   });
   final List<Widget> panels;
   final Widget? footer;
   final List<String>? tabLabels;
   final bool continuous;
+
+  /// Fixed heights are only used to bound the nested lists inside each panel.
+  /// Callers can tune them per workspace while keeping the desktop layout
+  /// completely unchanged.
+  final List<double>? mobilePanelHeights;
   @override
   State<IPhoneWorkspace> createState() => _IPhoneWorkspaceState();
 }
@@ -275,130 +287,147 @@ class _IPhoneWorkspaceState extends State<IPhoneWorkspace> {
   Widget build(BuildContext context) => widget.continuous
       ? SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 16),
           physics: const BouncingScrollPhysics(),
           child: Column(
             children: [
-              for (final panel in widget.panels)
+              for (var index = 0; index < widget.panels.length; index++)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: SizedBox(height: 620, child: panel),
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: SizedBox(
+                    height:
+                        widget.mobilePanelHeights != null &&
+                            index < widget.mobilePanelHeights!.length
+                        ? widget.mobilePanelHeights![index]
+                        : 620,
+                    child: widget.panels[index],
+                  ),
                 ),
               if (widget.footer != null) widget.footer!,
             ],
           ),
         )
       : Column(
-    children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: SizedBox(
-          width: double.infinity,
-          child: CupertinoSlidingSegmentedControl<int>(
-            groupValue: _step,
-            onValueChanged: (value) {
-              if (value == null) return;
-              FocusManager.instance.primaryFocus?.unfocus();
-              setState(() => _step = value);
-            },
-            children: {
-              0: Padding(
-                padding: EdgeInsets.symmetric(vertical: 10),
-                child: Text(
-                  widget.tabLabels?[0] ?? 'ទំហំ',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontFamily: 'NotoSansKhmer',
-                    fontFamilyFallback: const ['Roboto'],
-                    color: CupertinoColors.label.resolveFrom(context),
-                  ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: CupertinoSlidingSegmentedControl<int>(
+                  groupValue: _step,
+                  onValueChanged: (value) {
+                    if (value == null) return;
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    setState(() => _step = value);
+                  },
+                  children: {
+                    0: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Text(
+                        widget.tabLabels?[0] ?? 'ទំហំ',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: 'NotoSansKhmer',
+                          fontFamilyFallback: const ['Roboto'],
+                          color: CupertinoColors.label.resolveFrom(context),
+                        ),
+                      ),
+                    ),
+                    1: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Text(
+                        widget.tabLabels?[1] ?? 'ផលិតផល',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: 'NotoSansKhmer',
+                          fontFamilyFallback: const ['Roboto'],
+                          color: CupertinoColors.label.resolveFrom(context),
+                        ),
+                      ),
+                    ),
+                    2: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Text(
+                        widget.tabLabels?[2] ?? 'លទ្ធផល',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: 'NotoSansKhmer',
+                          fontFamilyFallback: const ['Roboto'],
+                          color: CupertinoColors.label.resolveFrom(context),
+                        ),
+                      ),
+                    ),
+                  },
                 ),
               ),
-              1: Padding(
-                padding: EdgeInsets.symmetric(vertical: 10),
-                child: Text(
-                  widget.tabLabels?[1] ?? 'ផលិតផល',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontFamily: 'NotoSansKhmer',
-                    fontFamilyFallback: const ['Roboto'],
-                    color: CupertinoColors.label.resolveFrom(context),
-                  ),
-                ),
-              ),
-              2: Padding(
-                padding: EdgeInsets.symmetric(vertical: 10),
-                child: Text(
-                  widget.tabLabels?[2] ?? 'លទ្ធផល',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontFamily: 'NotoSansKhmer',
-                    fontFamilyFallback: const ['Roboto'],
-                    color: CupertinoColors.label.resolveFrom(context),
-                  ),
-                ),
-              ),
-            },
-          ),
-        ),
-      ),
-      Expanded(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics(),
-              ),
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: constraints.maxHeight < 640
-                        ? 640
-                        : constraints.maxHeight - 20,
-                    child: IndexedStack(index: _step, children: widget.panels),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: Row(
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
+                    child: Column(
                       children: [
-                        if (_step > 0)
-                          Expanded(
-                            child: CupertinoButton.tinted(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              onPressed: () {
-                                FocusManager.instance.primaryFocus?.unfocus();
-                                setState(() => _step--);
-                              },
-                              child: const Text('ត្រឡប់'),
-                            ),
+                        SizedBox(
+                          height: constraints.maxHeight < 640
+                              ? 640
+                              : constraints.maxHeight - 20,
+                          child: IndexedStack(
+                            index: _step,
+                            children: widget.panels,
                           ),
-                        if (_step > 0 && _step < widget.panels.length - 1)
-                          const SizedBox(width: 10),
-                        if (_step < widget.panels.length - 1)
-                          Expanded(
-                            child: CupertinoButton.filled(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              onPressed: () {
-                                FocusManager.instance.primaryFocus?.unfocus();
-                                setState(() => _step++);
-                              },
-                              child: const Text('បន្ទាប់'),
-                            ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 14),
+                          child: Row(
+                            children: [
+                              if (_step > 0)
+                                Expanded(
+                                  child: CupertinoButton.tinted(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    onPressed: () {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
+                                      setState(() => _step--);
+                                    },
+                                    child: const Text('ត្រឡប់'),
+                                  ),
+                                ),
+                              if (_step > 0 && _step < widget.panels.length - 1)
+                                const SizedBox(width: 10),
+                              if (_step < widget.panels.length - 1)
+                                Expanded(
+                                  child: CupertinoButton.filled(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    onPressed: () {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
+                                      setState(() => _step++);
+                                    },
+                                    child: const Text('បន្ទាប់'),
+                                  ),
+                                ),
+                            ],
                           ),
+                        ),
+                        if (_step == 2 && widget.footer != null) widget.footer!,
                       ],
                     ),
-                  ),
-                  if (_step == 2 && widget.footer != null) widget.footer!,
-                ],
+                  );
+                },
               ),
-            );
-          },
-        ),
-      ),
-    ],
-  );
+            ),
+          ],
+        );
 }
 
 class IPhoneMenuEntry {
