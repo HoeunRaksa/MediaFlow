@@ -29,7 +29,6 @@ class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
   final _price = TextEditingController();
   final _ceilingReplies = CeilingKhmerReplies();
   int _category = 0;
-  bool _details = false;
   bool _copying = false;
   String? _feedback;
   List<String> _lines = const [];
@@ -70,13 +69,14 @@ class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
 
   @override
   Widget build(BuildContext context) => IPhonePage(title: 'Facebook Reply', child: ListView(padding: const EdgeInsets.fromLTRB(12, 8, 12, 28), children: [
-    CupertinoSlidingSegmentedControl<int>(groupValue: _category, onValueChanged: (v) { if (v != null) setState(() { _category = v; _feedback = null; }); _schedule(); }, children: const {0: Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Text('ពិដាន 60×60')), 1: Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Text('ក្ដារ PVC'))}),
+    Row(children: [AppBrandLogo(size: 38), const SizedBox(width: 9), const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('សំណើសម្ភារៈ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)), Text('ឆ្លើយតប comment អតិថិជន', style: TextStyle(fontSize: 11, color: Colors.black54))])), IconButton(onPressed: _recalculate, icon: const Icon(Icons.refresh_rounded))]),
+    const SizedBox(height: 8),
+    Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: const Color(0xFFE8EEF8), borderRadius: BorderRadius.circular(12)), child: CupertinoSlidingSegmentedControl<int>(groupValue: _category, onValueChanged: (v) { if (v != null) setState(() { _category = v; _feedback = null; }); _schedule(); }, children: const {0: Padding(padding: EdgeInsets.symmetric(vertical: 9), child: Text('▰  ពិដាន 60×60')), 1: Padding(padding: EdgeInsets.symmetric(vertical: 9), child: Text('▱  ក្ដារ PVC'))})),
     const SizedBox(height: 12),
     Wrap(spacing: 8, runSpacing: 8, children: [SizedBox(width: 120, child: AdaptiveTextField(controller: _length, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'បណ្ដោយ'))), SizedBox(width: 120, child: AdaptiveTextField(controller: _width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ទទឹង'))), SizedBox(width: 110, child: AdaptiveTextField(controller: _count, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ចំនួន')))]),
-    const SizedBox(height: 8), Text('ផ្ទៃសរុប៖ ${_area.toStringAsFixed(2)} m²', style: const TextStyle(fontWeight: FontWeight.w700)),
-    const SizedBox(height: 8), AdaptiveActionButton.filledIcon(key: const ValueKey('facebook-copy-reply'), onPressed: _lines.isEmpty || _copying ? null : _copy, icon: const Icon(Icons.copy_rounded), label: const Text('Copy Reply')),
+    const SizedBox(height: 8), Row(children: [Expanded(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: const Color(0xFFEAF2FF), borderRadius: BorderRadius.circular(10)), child: Text('ផ្ទៃសរុប\n${_area.toStringAsFixed(2)} m²', style: const TextStyle(color: Color(0xFF163F7A), fontWeight: FontWeight.w800)))), const SizedBox(width: 8), Expanded(child: AdaptiveActionButton.filledIcon(key: const ValueKey('facebook-copy-reply'), onPressed: _lines.isEmpty || _copying ? null : _copy, icon: const Icon(Icons.copy_rounded, size: 18), label: const Text('ចម្លងចម្លើយ')))]),
     if (_feedback != null) Padding(padding: const EdgeInsets.only(top: 6), child: Semantics(liveRegion: true, child: Text(_feedback!))),
-    const SizedBox(height: 10), Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.all(Radius.circular(14))), child: SelectableText(_reply.isEmpty ? 'បញ្ចូលទំហំ ដើម្បីបង្កើតចម្លើយ។' : _reply, style: const TextStyle(fontFamily: 'NotoSansKhmer', height: 1.55))),
-    const SizedBox(height: 8), ExpansionTile(title: const Text('លម្អិតសម្ភារៈ'), initiallyExpanded: _details, onExpansionChanged: (v) => setState(() => _details = v), children: [for (final line in _lines) ListTile(dense: true, title: Text(line))]),
+    const SizedBox(height: 10), Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFFEAF2FF), borderRadius: BorderRadius.circular(14)), child: SelectableText(_reply.isEmpty ? 'បញ្ចូលទំហំ ដើម្បីបង្កើតចម្លើយ។' : _reply, style: const TextStyle(fontFamily: 'NotoSansKhmer', height: 1.5))),
+    const SizedBox(height: 8), ExpansionTile(title: const Text('☷  បញ្ជីសម្ភារៈ', style: TextStyle(fontWeight: FontWeight.w800)), initiallyExpanded: true, children: [for (final line in _lines) ListTile(dense: true, leading: const Icon(Icons.crop_square_rounded, size: 24, color: Colors.blueGrey), title: Text(line), trailing: const Icon(Icons.chevron_right_rounded))]),
   ]));
 }
