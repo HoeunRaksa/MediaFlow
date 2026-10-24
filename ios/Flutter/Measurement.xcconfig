@@ -1,0 +1,3 @@
+CLANG_CXX_LANGUAGE_STANDARD = c++17
+HEADER_SEARCH_PATHS = $(inherited) "$(PROJECT_DIR)/../native/measurement/include"
+OTHER_LDFLAGS = $(inherited) -Wl,-export_dynamic -Wl,-u,_measurement_engine_create -Wl,-u,_measurement_engine_destroy -Wl,-u,_measurement_optimize -Wl,-u,_measurement_result_release

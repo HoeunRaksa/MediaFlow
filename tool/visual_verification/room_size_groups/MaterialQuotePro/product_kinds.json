@@ -1,0 +1,218 @@
+[
+  {
+    "id": "ceiling_full_set",
+    "nameKhmer": "សម្ភារៈពិដានពេញ",
+    "nameEnglish": "Ceiling Full Set",
+    "inputModeId": "area_m2",
+    "active": true,
+    "isDefault": true,
+    "defaultMaterialRules": [
+      {
+        "materialId": "ceiling_6mm",
+        "includedByDefault": true,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": "area_divided_by_coverage",
+        "coverageValueOverride": 0.36,
+        "multiplierValueOverride": null,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "box_plus_loose"
+      },
+      {
+        "materialId": "long_t_3m",
+        "includedByDefault": true,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": "area_times_multiplier",
+        "coverageValueOverride": null,
+        "multiplierValueOverride": 0.54,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "box_plus_loose"
+      },
+      {
+        "materialId": "short_t_06m",
+        "includedByDefault": true,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": "area_times_multiplier",
+        "coverageValueOverride": null,
+        "multiplierValueOverride": 2.7,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "box_plus_loose"
+      },
+      {
+        "materialId": "v_iron_295m",
+        "includedByDefault": true,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": "area_times_multiplier",
+        "coverageValueOverride": null,
+        "multiplierValueOverride": 0.2,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "box_plus_loose"
+      }
+    ],
+    "sortOrder": 1
+  },
+  {
+    "id": "ceiling_material_only",
+    "nameKhmer": "Tវែង + Tខ្លី + ដែក V",
+    "nameEnglish": "Long T + Short T + V Iron",
+    "inputModeId": "area_m2",
+    "active": true,
+    "isDefault": false,
+    "defaultMaterialRules": [
+      {
+        "materialId": "long_t_3m",
+        "includedByDefault": true,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": "area_times_multiplier",
+        "coverageValueOverride": null,
+        "multiplierValueOverride": 0.54,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "box_plus_loose"
+      },
+      {
+        "materialId": "short_t_06m",
+        "includedByDefault": true,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": "area_times_multiplier",
+        "coverageValueOverride": null,
+        "multiplierValueOverride": 2.7,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "box_plus_loose"
+      },
+      {
+        "materialId": "v_iron_295m",
+        "includedByDefault": true,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": "area_times_multiplier",
+        "coverageValueOverride": null,
+        "multiplierValueOverride": 0.2,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "box_plus_loose"
+      }
+    ],
+    "sortOrder": 2
+  },
+  {
+    "id": "insulation_only",
+    "nameKhmer": "អ៊ីសូឡង់",
+    "nameEnglish": "Insulation Only",
+    "inputModeId": "manual_quantity",
+    "active": true,
+    "isDefault": false,
+    "defaultMaterialRules": [
+      {
+        "materialId": "insulation_indonesia_13kg",
+        "includedByDefault": false,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": null,
+        "coverageValueOverride": null,
+        "multiplierValueOverride": null,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "unit_only"
+      },
+      {
+        "materialId": "insulation_2n_15kg",
+        "includedByDefault": false,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": null,
+        "coverageValueOverride": null,
+        "multiplierValueOverride": null,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "unit_only"
+      },
+      {
+        "materialId": "insulation_2n_17kg",
+        "includedByDefault": false,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": null,
+        "coverageValueOverride": null,
+        "multiplierValueOverride": null,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "unit_only"
+      }
+    ],
+    "sortOrder": 3
+  },
+  {
+    "id": "led_only",
+    "nameKhmer": "អំពូល LED",
+    "nameEnglish": "LED Only",
+    "inputModeId": "manual_quantity",
+    "active": true,
+    "isDefault": false,
+    "defaultMaterialRules": [
+      {
+        "materialId": "led_60w",
+        "includedByDefault": false,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": null,
+        "coverageValueOverride": null,
+        "multiplierValueOverride": null,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "unit_only"
+      }
+    ],
+    "sortOrder": 4
+  },
+  {
+    "id": "wire_only",
+    "nameKhmer": "លួស",
+    "nameEnglish": "Wire Only",
+    "inputModeId": "manual_quantity",
+    "active": true,
+    "isDefault": false,
+    "defaultMaterialRules": [
+      {
+        "materialId": "wire_2000m_11kg",
+        "includedByDefault": false,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": null,
+        "coverageValueOverride": null,
+        "multiplierValueOverride": null,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "unit_only"
+      }
+    ],
+    "sortOrder": 5
+  },
+  {
+    "id": "decoration_only",
+    "nameKhmer": "លម្អ",
+    "nameEnglish": "Decoration Only",
+    "inputModeId": "manual_quantity",
+    "active": true,
+    "isDefault": false,
+    "defaultMaterialRules": [
+      {
+        "materialId": "dk01",
+        "includedByDefault": false,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": null,
+        "coverageValueOverride": null,
+        "multiplierValueOverride": null,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "unit_only"
+      },
+      {
+        "materialId": "dk03",
+        "includedByDefault": false,
+        "allowManualOverride": true,
+        "formulaTypeOverrideId": null,
+        "coverageValueOverride": null,
+        "multiplierValueOverride": null,
+        "fixedQuantityOverride": null,
+        "defaultSellModeId": "unit_only"
+      }
+    ],
+    "sortOrder": 6
+  },
+  {
+    "id": "custom",
+    "nameKhmer": "ផលិតផលផ្សេងៗ",
+    "nameEnglish": "Custom",
+    "inputModeId": "manual_quantity",
+    "active": true,
+    "isDefault": false,
+    "defaultMaterialRules": [],
+    "sortOrder": 7
+  }
+]

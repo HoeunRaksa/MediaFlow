@@ -1,0 +1,52 @@
+name: Personal iPhone IPA
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: personal-iphone-build
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Flutter
+        run: |
+          git clone --depth 1 --branch 3.41.5 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Resolve dependencies
+        run: |
+          flutter config --no-enable-swift-package-manager
+          flutter pub get --enforce-lockfile
+      - name: Check native engine on macOS
+        run: |
+          cmake -S native/measurement -B build/native-test -DMEASUREMENT_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/native-test --config Release
+          ctest --test-dir build/native-test --output-on-failure
+      - name: Compile release for physical iPhone
+        run: flutter build ios --release --no-codesign
+      - name: Validate and package unsigned IPA for local signing
+        run: |
+          set -euo pipefail
+          APP=build/ios/iphoneos/Runner.app
+          test -f "$APP/Runner"
+          xcrun lipo -verify_arch arm64 "$APP/Runner"
+          xcrun nm -gU "$APP/Runner" > build/ios/native-symbols.txt
+          for symbol in measurement_engine_create measurement_engine_destroy measurement_optimize measurement_result_release; do
+            grep -q "_$symbol$" build/ios/native-symbols.txt
+          done
+          mkdir -p build/personal-ipa/Payload
+          ditto "$APP" build/personal-ipa/Payload/Runner.app
+          cd build/personal-ipa
+          /usr/bin/zip -qry MaterialQuotePro-unsigned.ipa Payload
+          shasum -a 256 MaterialQuotePro-unsigned.ipa > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: personal-iphone-ipa
+          path: |
+            build/personal-ipa/MaterialQuotePro-unsigned.ipa
+            build/personal-ipa/SHA256SUMS.txt
+          retention-days: 3
+          if-no-files-found: error

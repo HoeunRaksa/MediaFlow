@@ -1,0 +1,317 @@
+{
+  "settings": {
+    "useSavedPriceAsDefault": true,
+    "allowSaleBelowCost": false
+  },
+  "pricingTiers": [
+    {
+      "id": "retail",
+      "nameKhmer": "តម្លៃលក់រាយ",
+      "nameEnglish": "Retail",
+      "pricingBehaviorId": "unit_price",
+      "active": true,
+      "isDefault": true,
+      "sortOrder": 1,
+      "createdAt": "2026-01-01T00:00:00.000",
+      "updatedAt": "2026-01-01T00:00:00.000"
+    },
+    {
+      "id": "wholesale",
+      "nameKhmer": "តម្លៃបោះដុំ",
+      "nameEnglish": "Wholesale",
+      "pricingBehaviorId": "unit_price",
+      "active": true,
+      "isDefault": false,
+      "sortOrder": 2,
+      "createdAt": "2026-01-01T00:00:00.000",
+      "updatedAt": "2026-01-01T00:00:00.000"
+    },
+    {
+      "id": "box",
+      "nameKhmer": "តម្លៃលក់កេស",
+      "nameEnglish": "Box",
+      "pricingBehaviorId": "box_price",
+      "active": true,
+      "isDefault": false,
+      "sortOrder": 3,
+      "createdAt": "2026-01-01T00:00:00.000",
+      "updatedAt": "2026-01-01T00:00:00.000"
+    }
+  ],
+  "formulaRules": [
+    {
+      "id": "area_divided_by_coverage",
+      "formulaTypeId": "area_divided_by_coverage",
+      "nameKhmer": "ផ្ទៃចែកនឹងគ្របដណ្ដប់",
+      "nameEnglish": "Area divided by coverage",
+      "description": "raw quantity = area / coverage value",
+      "requiresCoverageValue": true,
+      "requiresMultiplierValue": false,
+      "requiresFixedQuantity": false,
+      "requiresManualQuantity": false,
+      "active": true,
+      "sortOrder": 1
+    },
+    {
+      "id": "area_times_multiplier",
+      "formulaTypeId": "area_times_multiplier",
+      "nameKhmer": "ផ្ទៃគុណមេគុណ",
+      "nameEnglish": "Area times multiplier",
+      "description": "raw quantity = area * multiplier value",
+      "requiresCoverageValue": false,
+      "requiresMultiplierValue": true,
+      "requiresFixedQuantity": false,
+      "requiresManualQuantity": false,
+      "active": true,
+      "sortOrder": 2
+    },
+    {
+      "id": "fixed_quantity",
+      "formulaTypeId": "fixed_quantity",
+      "nameKhmer": "ចំនួនថេរ",
+      "nameEnglish": "Fixed quantity",
+      "description": "raw quantity = fixed quantity",
+      "requiresCoverageValue": false,
+      "requiresMultiplierValue": false,
+      "requiresFixedQuantity": true,
+      "requiresManualQuantity": false,
+      "active": true,
+      "sortOrder": 3
+    },
+    {
+      "id": "manual_quantity",
+      "formulaTypeId": "manual_quantity",
+      "nameKhmer": "បញ្ចូលចំនួនផ្ទាល់",
+      "nameEnglish": "Manual quantity",
+      "description": "raw quantity = manual quantity from user input",
+      "requiresCoverageValue": false,
+      "requiresMultiplierValue": false,
+      "requiresFixedQuantity": false,
+      "requiresManualQuantity": true,
+      "active": true,
+      "sortOrder": 4
+    },
+    {
+      "id": "area_service",
+      "formulaTypeId": "area_service",
+      "nameKhmer": "សេវាតាមការ៉េ",
+      "nameEnglish": "Area service",
+      "description": "line total = area * service price",
+      "requiresCoverageValue": false,
+      "requiresMultiplierValue": false,
+      "requiresFixedQuantity": false,
+      "requiresManualQuantity": false,
+      "active": true,
+      "sortOrder": 5
+    },
+    {
+      "id": "area_times_multiplier_plus_fixed",
+      "formulaTypeId": "area_times_multiplier_plus_fixed",
+      "nameKhmer": "ផ្ទៃគុណមេគុណបូកចំនួនថេរ",
+      "nameEnglish": "Area times multiplier plus fixed",
+      "description": "reserved for later implementation",
+      "requiresCoverageValue": false,
+      "requiresMultiplierValue": true,
+      "requiresFixedQuantity": true,
+      "requiresManualQuantity": false,
+      "active": true,
+      "sortOrder": 6
+    },
+    {
+      "id": "area_divided_by_coverage_plus_waste",
+      "formulaTypeId": "area_divided_by_coverage_plus_waste",
+      "nameKhmer": "ផ្ទៃចែកគ្របដណ្ដប់បូកខាតបង់",
+      "nameEnglish": "Area divided by coverage plus waste",
+      "description": "reserved for later implementation",
+      "requiresCoverageValue": true,
+      "requiresMultiplierValue": false,
+      "requiresFixedQuantity": false,
+      "requiresManualQuantity": false,
+      "active": true,
+      "sortOrder": 7
+    }
+  ],
+  "units": [
+    {
+      "id": "sheet",
+      "nameKhmer": "សន្លឹក",
+      "nameEnglish": "Sheet",
+      "abbreviationKhmer": "សន្លឹក",
+      "abbreviationEnglish": "sheet",
+      "active": true,
+      "sortOrder": 1
+    },
+    {
+      "id": "piece",
+      "nameKhmer": "ដើម",
+      "nameEnglish": "Piece",
+      "abbreviationKhmer": "ដើម",
+      "abbreviationEnglish": "pc",
+      "active": true,
+      "sortOrder": 2
+    },
+    {
+      "id": "roll",
+      "nameKhmer": "ដុំ",
+      "nameEnglish": "Roll",
+      "abbreviationKhmer": "ដុំ",
+      "abbreviationEnglish": "roll",
+      "active": true,
+      "sortOrder": 3
+    },
+    {
+      "id": "box",
+      "nameKhmer": "កេស",
+      "nameEnglish": "Box",
+      "abbreviationKhmer": "កេស",
+      "abbreviationEnglish": "box",
+      "active": true,
+      "sortOrder": 4
+    },
+    {
+      "id": "set",
+      "nameKhmer": "ឈុត",
+      "nameEnglish": "Set",
+      "abbreviationKhmer": "ឈុត",
+      "abbreviationEnglish": "set",
+      "active": true,
+      "sortOrder": 5
+    },
+    {
+      "id": "meter",
+      "nameKhmer": "ម៉ែត្រ",
+      "nameEnglish": "Meter",
+      "abbreviationKhmer": "ម",
+      "abbreviationEnglish": "m",
+      "active": true,
+      "sortOrder": 6
+    },
+    {
+      "id": "sqm",
+      "nameKhmer": "ម៉ែត្រការ៉េ",
+      "nameEnglish": "Square Meter",
+      "abbreviationKhmer": "ម²",
+      "abbreviationEnglish": "m²",
+      "active": true,
+      "sortOrder": 7
+    },
+    {
+      "id": "service",
+      "nameKhmer": "សេវា",
+      "nameEnglish": "Service",
+      "abbreviationKhmer": "សេវា",
+      "abbreviationEnglish": "service",
+      "active": true,
+      "sortOrder": 8
+    }
+  ],
+  "categories": [
+    {
+      "id": "ceiling",
+      "nameKhmer": "ពិដាន",
+      "nameEnglish": "Ceiling",
+      "active": true,
+      "sortOrder": 1
+    },
+    {
+      "id": "t_bar",
+      "nameKhmer": "ធីបា",
+      "nameEnglish": "T Bar",
+      "active": true,
+      "sortOrder": 2
+    },
+    {
+      "id": "v_iron",
+      "nameKhmer": "ដែក V",
+      "nameEnglish": "V Iron",
+      "active": true,
+      "sortOrder": 3
+    },
+    {
+      "id": "wire",
+      "nameKhmer": "លួស",
+      "nameEnglish": "Wire",
+      "active": true,
+      "sortOrder": 4
+    },
+    {
+      "id": "led",
+      "nameKhmer": "អំពូល LED",
+      "nameEnglish": "LED",
+      "active": true,
+      "sortOrder": 5
+    },
+    {
+      "id": "insulation",
+      "nameKhmer": "អ៊ីសូឡង់",
+      "nameEnglish": "Insulation",
+      "active": true,
+      "sortOrder": 6
+    },
+    {
+      "id": "decoration",
+      "nameKhmer": "លម្អ",
+      "nameEnglish": "Decoration",
+      "active": true,
+      "sortOrder": 7
+    },
+    {
+      "id": "service",
+      "nameKhmer": "សេវា",
+      "nameEnglish": "Service",
+      "active": true,
+      "sortOrder": 8
+    },
+    {
+      "id": "other",
+      "nameKhmer": "ផ្សេងៗ",
+      "nameEnglish": "Other",
+      "active": true,
+      "sortOrder": 9
+    },
+    {
+      "id": "pvc",
+      "nameKhmer": "PVC",
+      "nameEnglish": "PVC",
+      "active": true,
+      "sortOrder": 10
+    }
+  ],
+  "sellModes": [
+    {
+      "id": "unit_only",
+      "nameKhmer": "ទិញរាយ",
+      "nameEnglish": "Unit Only",
+      "description": "Customer is charged each rounded item one by one.",
+      "active": true
+    },
+    {
+      "id": "box_only_round_up",
+      "nameKhmer": "ទិញជាកេស",
+      "nameEnglish": "Box Only Round Up",
+      "description": "Customer is charged by full boxes, rounded up.",
+      "active": true
+    },
+    {
+      "id": "box_plus_loose",
+      "nameKhmer": "ទិញកេស + រាយ",
+      "nameEnglish": "Box + Loose",
+      "description": "Customer is charged full boxes plus loose items.",
+      "active": true
+    },
+    {
+      "id": "manual_total",
+      "nameKhmer": "បញ្ចូលចំនួនផ្ទាល់",
+      "nameEnglish": "Manual Total",
+      "description": "Reserved for manual final price entry.",
+      "active": true
+    },
+    {
+      "id": "area_service",
+      "nameKhmer": "សេវាតាមការ៉េ",
+      "nameEnglish": "Area Service",
+      "description": "Charge by area. Never appears in pick-list.",
+      "active": true
+    }
+  ]
+}
