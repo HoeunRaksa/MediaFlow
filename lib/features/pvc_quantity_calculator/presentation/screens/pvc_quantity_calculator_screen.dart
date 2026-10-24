@@ -352,7 +352,7 @@ class _PvcQuantityCalculatorScreenState
       children: [
         Expanded(
           child: Text(
-            '${item.product.nameKhmer} · ${item.quantitySummary}',
+            '${item.product.customerNameKhmer} · ${item.quantitySummary}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
@@ -452,7 +452,7 @@ class _PvcQuantityCalculatorScreenState
         'ℹ️ បរិមាណសន្លឹក៖ ប៉ាន់ស្មានតាមផ្ទៃ អាចមានសំណល់បន្ថែម',
       for (final item in products)
         if (item.quantity > 0)
-          '• ${item.product.nameKhmer}៖ ${item.quantitySummary} · ${MoneyFormatter.money(item.billableQuantity * (double.tryParse(_priceControllers[item.product.id]?.text.trim() ?? '') ?? 0.0))}',
+          '• ${item.product.customerNameKhmer}៖ ${item.quantitySummary} · ${MoneyFormatter.money(item.billableQuantity * (double.tryParse(_priceControllers[item.product.id]?.text.trim() ?? '') ?? 0.0))}',
       'សរុបតម្លៃ៖ ${MoneyFormatter.money(total)}',
     ];
     return lines.join('\n');
@@ -1678,7 +1678,7 @@ class _ZoneCard extends StatelessWidget {
         ),
         SizedBox(height: 7),
         Text(
-          '${_number(packaging.piecesPerMeter)} គ្រាប់ / 1m',
+          '${_number(packaging.piecesPerMeter)} ឃ្នៀប / 1m',
           style: TextStyle(
             color: AppColors.textSecondary,
             fontSize: 11,
@@ -1692,7 +1692,7 @@ class _ZoneCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '= $pieces គ្រាប់',
+                '= $pieces ឃ្នៀប',
                 key: ValueKey('pvc-zone-pieces-${zone.id}'),
                 style: TextStyle(
                   color: AppColors.primaryText,
@@ -1701,7 +1701,7 @@ class _ZoneCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '= $packages កញ្ចប់',
+                '= $packages កញ្ចប់ (${packages * packaging.piecesPerPackage} ឃ្នៀប)',
                 key: ValueKey('pvc-zone-packages-${zone.id}'),
                 style: TextStyle(
                   color: AppColors.textSecondary,
@@ -2168,7 +2168,7 @@ class _ProductResultCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      result.product.nameKhmer,
+                      result.product.customerNameKhmer,
                       style: TextStyle(
                         color: iPhoneColor(context, AppColors.textMain),
                         fontSize: 14,
@@ -2221,9 +2221,9 @@ class _ProductResultCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  if (result.requiredPackages case final packages?)
+                  if (result.requiredPackages != null)
                     Text(
-                      '$packages បាច់',
+                      result.packageSummary,
                       style: TextStyle(
                         color: iPhoneColor(context, AppColors.textMuted),
                         fontSize: 10,
@@ -2252,16 +2252,16 @@ class _ProductResultCard extends StatelessWidget {
               icon: Icons.straighten_rounded,
               text: 'Required: ${_number(result.requiredLinearM)} m',
             ),
-          if (result.requiredPackages case final packages?)
+          if (result.requiredPackages != null)
             _ResultMetric(
               icon: Icons.inventory_2_outlined,
-              text: '$packages កញ្ចប់',
+              text: result.packageSummary,
             ),
           if (result.loosePieces case final loose?
-              when result.requiredPackages != null)
+              when result.requiredPackages != null && loose > 0)
             _ResultMetric(
               icon: Icons.view_list_outlined,
-              text: '$loose ដើមក្នុងតម្រូវការ',
+              text: '$loose ${result.unitLabel} ក្នុងតម្រូវការ',
             ),
           for (final notice in result.notices)
             _ResultMetric(icon: Icons.info_outline_rounded, text: notice),

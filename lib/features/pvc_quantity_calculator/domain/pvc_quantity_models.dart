@@ -93,6 +93,30 @@ class PvcPhysicalProduct {
 
   bool get isPackagePriced => piecesPerPackage != null && piecesPerPackage! > 1;
 
+  /// Customer-facing unit for a complete sellable package.
+  ///
+  /// C-Line is sold in bundles (បាច់), while the stainless PVC clips are
+  /// sold in packages (កញ្ចប់). Keep this distinction on the shared product
+  /// model so Windows and Web quotations cannot drift apart.
+  String get packageUnitLabel =>
+      perMeterPackaging != null || category != PvcProductCategory.cLine
+      ? 'កញ្ចប់'
+      : 'បាច់';
+
+  /// Customer-facing name for quotation lines. The catalog retains the full
+  /// physical product name, but quotations use the concise trade names.
+  String get customerNameKhmer {
+    if (perMeterPackaging != null) return 'ឃ្នៀប';
+    if (category == PvcProductCategory.cLine && pieceLengthM != null) {
+      final meters = pieceLengthM!;
+      final length = meters == meters.roundToDouble()
+          ? meters.toInt().toString()
+          : meters.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
+      return 'C-Line ${length}m';
+    }
+    return nameKhmer;
+  }
+
   bool get supportsManualSheetQuantity =>
       calculationUnit == PvcProductCalculationUnit.area &&
       category == PvcProductCategory.panels;
@@ -414,20 +438,27 @@ class PvcProductQuantityResult {
     return quantity % piecesPerPackage;
   }
 
-  String get priceUnitLabel => product.isPackagePriced ? 'បាច់' : unitLabel;
+  String get priceUnitLabel =>
+      product.isPackagePriced ? product.packageUnitLabel : unitLabel;
 
   double get billableQuantity => product.isPackagePriced
       ? (requiredPackages ?? 0).toDouble()
       : quantity.toDouble();
 
-  /// A compact, customer-facing description of the physical requirement.
-  /// Packaged accessories are billed by full boxes while retaining the loose
-  /// piece count so the quotation remains auditable.
+  /// A compact, customer-facing description of the purchase quantity.
+  /// Packaged products are billed by full packages and show the physical
+  /// contents customers receive, e.g. `2 បាច់ (40 ដើម)`.
   String get quantitySummary {
     final packages = requiredPackages;
     if (packages == null) return '$quantity $unitLabel';
-    return '$quantity $unitLabel · $packages បាច់';
+    final piecesPerPackage = product.piecesPerPackage!;
+    final purchasedPieces = packages * piecesPerPackage;
+    return '$packages ${product.packageUnitLabel} '
+        '($purchasedPieces $unitLabel)';
   }
+
+  /// Full-package breakdown used in detailed result panels.
+  String get packageSummary => quantitySummary;
 
   /// Validation/calculation notices must remain visible instead of silently
   /// presenting a zero quantity for an item that could not be calculated.

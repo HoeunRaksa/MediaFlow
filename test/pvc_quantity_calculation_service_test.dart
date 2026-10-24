@@ -331,9 +331,10 @@ void main() {
         );
         expect(clips.requiredLinearM, closeTo(20.4, 0.0001));
         expect(clips.quantity, 41);
-        expect(clips.unitLabel, 'គ្រាប់');
+        expect(clips.unitLabel, 'ឃ្នៀប');
         expect(clips.requiredPackages, 1);
         expect(clips.billableQuantity, 1);
+        expect(clips.quantitySummary, '1 កញ្ចប់ (100 ឃ្នៀប)');
       },
     );
 
@@ -412,6 +413,7 @@ void main() {
       expect(fourByFour.requiredPackages, 1);
       expect(fourByFour.loosePieces, 0);
       expect(fourByFour.billableQuantity, 1);
+      expect(fourByFour.quantitySummary, '1 បាច់ (20 ដើម)');
 
       final fortyOneByForty = await calculate(41, 40);
       expect(fortyOneByForty.requiredLinearM, 162);
@@ -447,6 +449,7 @@ void main() {
       expect(cLine.quantity, 40);
       expect(cLine.requiredPackages, 2);
       expect(cLine.billableQuantity, 2);
+      expect(cLine.quantitySummary, '2 បាច់ (40 ដើម)');
     });
 
     test('does not require clips for non-K/P PVC', () async {

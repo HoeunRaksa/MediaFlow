@@ -321,12 +321,12 @@ void main() {
             ?.text,
         '20.4',
       );
-      expect(find.text('2 គ្រាប់ / 1m'), findsOneWidget);
-      expect(find.text('= 41 គ្រាប់'), findsOneWidget);
-      expect(find.text('= 1 កញ្ចប់'), findsOneWidget);
+      expect(find.text('2 ឃ្នៀប / 1m'), findsOneWidget);
+      expect(find.text('= 41 ឃ្នៀប'), findsOneWidget);
+      expect(find.text('= 1 កញ្ចប់ (100 ឃ្នៀប)'), findsOneWidget);
       expect(_resultQuantity(tester, 'pvc_image1_row16'), '41');
       expect(find.text('Required: 20.4 m'), findsOneWidget);
-      expect(find.text('1 កញ្ចប់'), findsWidgets);
+      expect(find.textContaining('1 កញ្ចប់'), findsWidgets);
       expect(find.byKey(const ValueKey('pvc-zone-mode-area-2')), findsNothing);
       expect(find.byKey(const ValueKey('pvc-zone-settings-2')), findsNothing);
       expect(
@@ -338,7 +338,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 140));
       await tester.pumpAndSettle();
       expect(_resultQuantity(tester, 'pvc_image1_row16'), '120');
-      expect(find.text('= 2 កញ្ចប់'), findsOneWidget);
+      expect(find.text('= 2 កញ្ចប់ (200 ឃ្នៀប)'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('pvc-zone-auto-length-2')),
         findsOneWidget,
@@ -367,7 +367,7 @@ void main() {
         '18',
       );
       expect(_resultQuantity(tester, 'pvc_image1_row16'), '36');
-      expect(find.text('= 1 កញ្ចប់'), findsOneWidget);
+      expect(find.text('= 1 កញ្ចប់ (100 ឃ្នៀប)'), findsOneWidget);
 
       await tester.enterText(_field('pvc-group-length-1'), '6');
       await tester.enterText(_field('pvc-group-width-1'), '4.2');

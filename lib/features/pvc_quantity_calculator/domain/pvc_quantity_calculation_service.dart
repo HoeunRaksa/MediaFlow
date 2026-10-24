@@ -526,7 +526,7 @@ class PvcQuantityCalculationService {
 
   String _unitLabel(PvcPhysicalProduct product) =>
       product.perMeterPackaging != null
-      ? 'គ្រាប់'
+      ? 'ឃ្នៀប'
       : switch (product.calculationUnit) {
           PvcProductCalculationUnit.area => 'សន្លឹក',
           PvcProductCalculationUnit.linear => 'ដើម',
