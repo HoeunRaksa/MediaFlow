@@ -112,6 +112,7 @@ class _MeasurementCalculatorScreenState
           if (isIPhoneLayout(context)) {
             return IPhoneWorkspace(
               panels: [_measurementPanel(), _productsPanel(), _resultPanel()],
+              continuous: true,
               tabLabels: [
                 'បន្ទប់',
                 'សម្ភារៈ (${_workspace.selections.length})',

@@ -283,6 +283,7 @@ class _CeilingCalculatorScreenState extends State<CeilingCalculatorScreen> {
         builder: (context, constraints) {
           if (isIPhoneLayout(context)) {
             return IPhoneWorkspace(
+              continuous: true,
               panels: [
                 _measurementPanel(),
                 _productsPanel(state, products),

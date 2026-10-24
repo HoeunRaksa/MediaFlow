@@ -110,6 +110,7 @@ class _PvcQuantityCalculatorScreenState
     if (!_initialized) return SizedBox.shrink();
     if (isIPhoneLayout(context)) {
       return IPhoneWorkspace(
+        continuous: true,
         panels: [_measurementPanel(), _productsPanel(), _resultsPanel()],
         footer: PvcReplyGenerator(),
       );

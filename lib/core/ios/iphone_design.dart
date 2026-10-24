@@ -257,10 +257,12 @@ class IPhoneWorkspace extends StatefulWidget {
     required this.panels,
     this.footer,
     this.tabLabels,
+    this.continuous = false,
   });
   final List<Widget> panels;
   final Widget? footer;
   final List<String>? tabLabels;
+  final bool continuous;
   @override
   State<IPhoneWorkspace> createState() => _IPhoneWorkspaceState();
 }
@@ -268,7 +270,23 @@ class IPhoneWorkspace extends StatefulWidget {
 class _IPhoneWorkspaceState extends State<IPhoneWorkspace> {
   int _step = 0;
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) => widget.continuous
+      ? SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              for (final panel in widget.panels)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: SizedBox(height: 620, child: panel),
+                ),
+              if (widget.footer != null) widget.footer!,
+            ],
+          ),
+        )
+      : Column(
     children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
