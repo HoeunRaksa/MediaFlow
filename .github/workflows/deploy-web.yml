@@ -1,0 +1,119 @@
+name: Build and deploy web app
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mediaflow-production
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flutter 3.41.5
+        run: |
+          git clone --depth 1 --branch 3.41.5 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve Flutter dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Build Flutter web release
+        run: flutter build web --release --base-href /
+
+      - name: Package web release
+        run: |
+          mkdir -p build/deployment
+          tar -czf build/deployment/mediaflow-web.tar.gz -C build/web .
+
+      - name: Upload web release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mediaflow-web-${{ github.sha }}
+          path: |
+            build/deployment/mediaflow-web.tar.gz
+            deploy/nginx/mediaflow.conf
+          retention-days: 3
+          if-no-files-found: error
+
+      - name: Check deploy key
+        id: deploy-key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          if [ -n "$DEPLOY_SSH_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Deployment skipped"
+              echo
+              echo "Add the repository Actions secret DEPLOY_SSH_KEY, then run this workflow again."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Deploy to EC2
+        if: steps.deploy-key.outputs.configured == 'true'
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: 13.212.32.202
+          DEPLOY_USER: ubuntu
+          DEPLOY_PATH: /var/www/mediaflow
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/mediaflow_deploy"
+          chmod 600 "$HOME/.ssh/mediaflow_deploy"
+          ssh-keygen -y -f "$HOME/.ssh/mediaflow_deploy" >/dev/null
+          ssh-keyscan -T 10 -H "$DEPLOY_HOST" >> "$HOME/.ssh/known_hosts"
+
+          tar -czf build/deployment/mediaflow-web.tar.gz -C build/web .
+          scp -i "$HOME/.ssh/mediaflow_deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            build/deployment/mediaflow-web.tar.gz deploy/nginx/mediaflow.conf \
+            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/"
+
+          ssh -i "$HOME/.ssh/mediaflow_deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "GITHUB_SHA='$GITHUB_SHA' DEPLOY_PATH='$DEPLOY_PATH' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          release_dir="$DEPLOY_PATH/releases/$GITHUB_SHA"
+          sudo install -d -o "$(id -un)" -g www-data -m 0755 "$DEPLOY_PATH" "$DEPLOY_PATH/releases"
+          mkdir -p "$release_dir"
+          tar -xzf "/tmp/mediaflow-web-$GITHUB_SHA.tar.gz" -C "$release_dir"
+
+          ln -sfn "$release_dir" "$DEPLOY_PATH/current.next"
+          mv -Tf "$DEPLOY_PATH/current.next" "$DEPLOY_PATH/current"
+
+          sudo install -m 0644 /tmp/mediaflow.conf /etc/nginx/sites-available/mediaflow
+          sudo ln -sfn /etc/nginx/sites-available/mediaflow /etc/nginx/sites-enabled/mediaflow
+          sudo nginx -t
+          sudo systemctl reload nginx
+
+          rm -f "/tmp/mediaflow-web-$GITHUB_SHA.tar.gz" /tmp/mediaflow.conf
+
+          mapfile -t old_releases < <(
+            find "$DEPLOY_PATH/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' |
+              sort -nr |
+              tail -n +6 |
+              cut -d' ' -f2-
+          )
+          for old_release in "${old_releases[@]}"; do
+            rm -rf -- "$old_release"
+          done
+          REMOTE
