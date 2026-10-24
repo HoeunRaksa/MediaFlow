@@ -55,6 +55,7 @@ class PvcPhysicalProduct {
     this.thicknessMm,
     this.lengthMm,
     this.perMeterPackaging,
+    this.piecesPerPackage,
     this.imagePath,
   });
 
@@ -70,6 +71,9 @@ class PvcPhysicalProduct {
   final double? thicknessMm;
   final double? lengthMm;
   final PvcPerMeterPackaging? perMeterPackaging;
+
+  /// Physical pieces included in one sellable bundle/box.
+  final int? piecesPerPackage;
   final List<String> designCodes;
   final String? imagePath;
 
@@ -86,6 +90,8 @@ class PvcPhysicalProduct {
       calculationUnit == PvcProductCalculationUnit.linear;
 
   bool get usesEditablePerimeterLength => perMeterPackaging != null;
+
+  bool get isPackagePriced => piecesPerPackage != null && piecesPerPackage! > 1;
 
   bool get supportsManualSheetQuantity =>
       calculationUnit == PvcProductCalculationUnit.area &&
@@ -397,8 +403,36 @@ class PvcProductQuantityResult {
   final List<PvcZoneQuantityResult> zones;
 
   int? get requiredPackages {
-    return product.perMeterPackaging?.packagesForPieces(quantity);
+    final piecesPerPackage = product.piecesPerPackage;
+    if (piecesPerPackage == null || piecesPerPackage <= 0) return null;
+    return (quantity / piecesPerPackage).ceil();
   }
+
+  int? get loosePieces {
+    final piecesPerPackage = product.piecesPerPackage;
+    if (piecesPerPackage == null || piecesPerPackage <= 0) return null;
+    return quantity % piecesPerPackage;
+  }
+
+  String get priceUnitLabel => product.isPackagePriced ? 'បាច់' : unitLabel;
+
+  double get billableQuantity => product.isPackagePriced
+      ? (requiredPackages ?? 0).toDouble()
+      : quantity.toDouble();
+
+  /// A compact, customer-facing description of the physical requirement.
+  /// Packaged accessories are billed by full boxes while retaining the loose
+  /// piece count so the quotation remains auditable.
+  String get quantitySummary {
+    final packages = requiredPackages;
+    if (packages == null) return '$quantity $unitLabel';
+    return '$quantity $unitLabel · $packages បាច់';
+  }
+
+  /// Validation/calculation notices must remain visible instead of silently
+  /// presenting a zero quantity for an item that could not be calculated.
+  List<String> get notices =>
+      zones.map((zone) => zone.notice).whereType<String>().toList();
 }
 
 class PvcQuantityWorkspaceResult {

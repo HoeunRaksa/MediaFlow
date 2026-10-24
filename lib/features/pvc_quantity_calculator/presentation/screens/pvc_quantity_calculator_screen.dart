@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app_state.dart';
+import '../../../../core/constants/business_ids.dart';
 import '../../../../core/theme/sakura_theme.dart';
 import '../../../../core/utils/money_formatter.dart';
 import '../../../../core/widgets/product_image_thumbnail.dart';
@@ -57,10 +58,38 @@ class _PvcQuantityCalculatorScreenState
 
   TextEditingController _priceControllerFor(String productId) {
     return _priceControllers.putIfAbsent(productId, () {
-      final controller = TextEditingController();
+      final controller = TextEditingController(
+        text: _defaultPriceFor(productId)?.toStringAsFixed(2),
+      );
       controller.addListener(() => setState(() {}));
       return controller;
     });
+  }
+
+  double? _defaultPriceFor(String productId) {
+    final product = _products.firstWhere(
+      (item) => item.id == productId,
+      orElse: () => throw StateError('Unknown PVC product: $productId'),
+    );
+    final priceType = product.isPackagePriced
+        ? PriceTypeIds.saleBoxPrice
+        : PriceTypeIds.saleUnitPrice;
+    AppState? state;
+    try {
+      state = context.read<AppState>();
+    } catch (_) {
+      // Some catalog/unit tests intentionally render this widget without the
+      // application provider. In that case prices stay editable and blank.
+      return null;
+    }
+    return state.prices
+        .where(
+          (price) =>
+              price.materialId == productId && price.priceTypeId == priceType,
+        )
+        .where((price) => price.active)
+        .map((price) => price.price)
+        .firstOrNull;
   }
 
   double _calculateGrandTotal(List<PvcProductQuantityResult> products) {
@@ -68,7 +97,7 @@ class _PvcQuantityCalculatorScreenState
     for (final res in products) {
       final controller = _priceControllers[res.product.id];
       final price = double.tryParse(controller?.text.trim() ?? '') ?? 0.0;
-      sum += res.quantity * price;
+      sum += res.billableQuantity * price;
     }
     return sum;
   }
@@ -145,6 +174,10 @@ class _PvcQuantityCalculatorScreenState
       for (final item in result?.products ?? const <PvcProductQuantityResult>[])
         if (item.quantity > 0) item,
     ];
+    final notices = [
+      for (final item in result?.products ?? const <PvcProductQuantityResult>[])
+        ...item.notices,
+    ];
     final grandTotal = _calculateGrandTotal(products);
     final quotation = _pvcQuotationText(products, grandTotal);
     final group = _activeGroup;
@@ -182,9 +215,30 @@ class _PvcQuantityCalculatorScreenState
                 allocatedArea: model.allocatedAreaM2,
               ),
               SizedBox(height: 8),
+              if (notices.isNotEmpty)
+                Container(
+                  margin: EdgeInsets.only(bottom: 7),
+                  padding: EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: iPhoneColor(context, AppColors.warningBg),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    notices.join(' • '),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: iPhoneColor(context, AppColors.warningText),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
               if (products.isEmpty)
                 Text(
-                  'សូមបន្ថែមសម្ភារៈក្នុងការកំណត់បន្ថែម',
+                  notices.isEmpty
+                      ? 'សូមបន្ថែមសម្ភារៈក្នុងការកំណត់បន្ថែម'
+                      : 'មិនទាន់មានសម្ភារៈដែលអាចគណនា',
                   style: TextStyle(
                     color: iPhoneColor(context, AppColors.textMuted),
                     fontSize: 12,
@@ -274,7 +328,7 @@ class _PvcQuantityCalculatorScreenState
       children: [
         Expanded(
           child: Text(
-            '${item.product.nameKhmer} · ${item.quantity} ${item.unitLabel}',
+            '${item.product.nameKhmer} · ${item.quantitySummary}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
@@ -290,7 +344,7 @@ class _PvcQuantityCalculatorScreenState
             keyboardType: TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               prefixText: r'$ ',
-              suffixText: '/${item.unitLabel}',
+              hintText: item.priceUnitLabel,
               isDense: true,
               contentPadding: EdgeInsets.symmetric(horizontal: 7, vertical: 7),
             ),
@@ -300,7 +354,7 @@ class _PvcQuantityCalculatorScreenState
         SizedBox(
           width: 70,
           child: Text(
-            MoneyFormatter.money(item.quantity * price),
+            MoneyFormatter.money(item.billableQuantity * price),
             textAlign: TextAlign.right,
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
           ),
@@ -355,7 +409,7 @@ class _PvcQuantityCalculatorScreenState
       '📐 ផ្ទៃសរុប៖ ${_number(area)}m²',
       for (final item in products)
         if (item.quantity > 0)
-          '• ${item.product.nameKhmer}៖ ${item.quantity} ${item.unitLabel}',
+          '• ${item.product.nameKhmer}៖ ${item.quantitySummary} · ${MoneyFormatter.money(item.billableQuantity * (double.tryParse(_priceControllers[item.product.id]?.text.trim() ?? '') ?? 0.0))}',
       'សរុបតម្លៃ៖ ${MoneyFormatter.money(total)}',
     ];
     return lines.join('\n');
@@ -2021,7 +2075,7 @@ class _ProductResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final priceVal = double.tryParse(priceController.text.trim()) ?? 0.0;
-    final lineTotal = result.quantity * priceVal;
+    final lineTotal = result.billableQuantity * priceVal;
 
     return Container(
       key: ValueKey('pvc-result-${result.product.id}'),
@@ -2092,6 +2146,15 @@ class _ProductResultCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (result.requiredPackages case final packages?)
+                    Text(
+                      '$packages បាច់',
+                      style: TextStyle(
+                        color: iPhoneColor(context, AppColors.textMuted),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                 ],
               ),
             ],
@@ -2114,6 +2177,14 @@ class _ProductResultCard extends StatelessWidget {
               icon: Icons.inventory_2_outlined,
               text: '$packages កញ្ចប់',
             ),
+          if (result.loosePieces case final loose?
+              when result.requiredPackages != null)
+            _ResultMetric(
+              icon: Icons.view_list_outlined,
+              text: '$loose ដើមក្នុងតម្រូវការ',
+            ),
+          for (final notice in result.notices)
+            _ResultMetric(icon: Icons.info_outline_rounded, text: notice),
           SizedBox(height: 10),
           Divider(height: 1, color: iPhoneColor(context, AppColors.border)),
           SizedBox(height: 8),
@@ -2124,7 +2195,7 @@ class _ProductResultCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'តម្លៃលក់ / ${result.unitLabel}',
+                      'តម្លៃលក់ / ${result.priceUnitLabel}',
                       style: TextStyle(
                         color: iPhoneColor(context, AppColors.textMuted),
                         fontSize: 11,
@@ -2290,12 +2361,16 @@ class _ResultMetric extends StatelessWidget {
             color: iPhoneColor(context, AppColors.textSecondary),
           ),
           SizedBox(width: 5),
-          Text(
-            text,
-            style: TextStyle(
-              color: iPhoneColor(context, AppColors.textSecondary),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: iPhoneColor(context, AppColors.textSecondary),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

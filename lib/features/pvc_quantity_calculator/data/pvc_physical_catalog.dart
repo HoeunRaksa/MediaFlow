@@ -49,6 +49,7 @@ class PvcPhysicalCatalog {
           thicknessMm: material.thicknessMm,
           lengthMm: material.lengthMm,
           perMeterPackaging: _perMeterPackaging(material),
+          piecesPerPackage: material.piecesPerBundle,
           designCodes: List.unmodifiable(designCodes.toList()..sort()),
           imagePath:
               rows.where((r) => r.imagePath != null).firstOrNull?.imagePath ??

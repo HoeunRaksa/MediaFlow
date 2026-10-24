@@ -56,6 +56,8 @@ void main() {
       expect(clip.areaAllocationRole, PvcAreaAllocationRole.none);
       expect(clip.perMeterPackaging?.piecesPerMeter, 2);
       expect(clip.perMeterPackaging?.piecesPerPackage, 100);
+      expect(clip.piecesPerPackage, 100);
+      expect(product('C.Line 0.23 x 4m').piecesPerPackage, 20);
     });
 
     test('offers manual sheets only for PVC panel products', () {
@@ -321,6 +323,53 @@ void main() {
         expect(clips.quantity, 41);
         expect(clips.unitLabel, 'គ្រាប់');
         expect(clips.requiredPackages, 1);
+        expect(clips.billableQuantity, 1);
+      },
+    );
+
+    test(
+      'calculates C-Line pieces and full boxes from actual room layout',
+      () async {
+        Future<PvcProductQuantityResult> calculate(
+          double length,
+          double width,
+        ) async {
+          final result = await service.calculate(
+            groups: [
+              PvcMeasurementGroup(
+                id: 1,
+                name: 'Area 1',
+                inputMode: PvcGroupInputMode.dimensions,
+                lengthM: length,
+                widthM: width,
+                roomCount: 1,
+                zones: [
+                  PvcQuantityZone(
+                    id: 1,
+                    name: 'C-Line zone',
+                    product: product('C.Line 0.23 x 4m'),
+                    inputMode: PvcZoneInputMode.perimeterStrip,
+                  ),
+                ],
+              ),
+            ],
+          );
+          return result.products.single;
+        }
+
+        final fourByFour = await calculate(4, 4);
+        expect(fourByFour.requiredLinearM, 16);
+        expect(fourByFour.quantity, 4);
+        expect(fourByFour.requiredPackages, 1);
+        expect(fourByFour.loosePieces, 4);
+        expect(fourByFour.billableQuantity, 1);
+
+        final fortyOneByForty = await calculate(41, 40);
+        expect(fortyOneByForty.requiredLinearM, 162);
+        expect(fortyOneByForty.quantity, 41);
+        expect(fortyOneByForty.requiredPackages, 3);
+        expect(fortyOneByForty.loosePieces, 1);
+        expect(fortyOneByForty.billableQuantity, 3);
       },
     );
 
