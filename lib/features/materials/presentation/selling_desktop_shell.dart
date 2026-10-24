@@ -23,6 +23,7 @@ import '../data/models/packaging_rule.dart';
 import '../data/models/product_type_template.dart';
 import '../data/models/unit_of_measure.dart';
 import '../domain/product_sale_models.dart';
+import 'facebook_comment_reply_page.dart';
 
 const _sidebar = AppColors.sidebar;
 const _surface = AppColors.surface;
@@ -37,6 +38,7 @@ const _textSecondary = AppColors.textSecondary;
 const _textMuted = AppColors.textMuted;
 
 enum SaleDestination {
+  facebookReply,
   ceiling,
   pvc,
   workspace,
@@ -135,6 +137,7 @@ class _SellingDesktopShellState extends State<SellingDesktopShell> {
 
   Widget _body(SaleDestination destination) {
     return switch (destination) {
+      SaleDestination.facebookReply => const FacebookCommentReplyPage(),
       SaleDestination.ceiling => CeilingCalculatorScreen(
         key: ValueKey('ceiling_calculator'),
       ),
@@ -173,6 +176,11 @@ class _DestinationMeta {
 
 _DestinationMeta _destinationMeta(SaleDestination destination) {
   return switch (destination) {
+    SaleDestination.facebookReply => const _DestinationMeta(
+      'Facebook Reply',
+      'ចម្លើយខ្លីសម្រាប់ comment អតិថិជន',
+      Icons.facebook_rounded,
+    ),
     SaleDestination.ceiling => const _DestinationMeta(
       'គណនាពិដាន',
       'គណនា / លក់ សម្ភារៈពិដាន',
