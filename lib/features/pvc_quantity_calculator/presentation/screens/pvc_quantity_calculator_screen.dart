@@ -14,7 +14,6 @@ import '../../../measurement_calculator/native/measurement_native_api.dart';
 import '../../data/pvc_physical_catalog.dart';
 import '../../domain/pvc_quantity_calculation_service.dart';
 import '../../domain/pvc_quantity_models.dart';
-import '../widgets/pvc_reply_generator.dart';
 
 class PvcQuantityCalculatorScreen extends StatefulWidget {
   const PvcQuantityCalculatorScreen({super.key, this.optimizer, this.products});
@@ -112,7 +111,6 @@ class _PvcQuantityCalculatorScreenState
       return IPhoneWorkspace(
         continuous: true,
         panels: [_measurementPanel(), _productsPanel(), _resultsPanel()],
-        footer: PvcReplyGenerator(),
       );
     }
     return LayoutBuilder(
@@ -123,10 +121,6 @@ class _PvcQuantityCalculatorScreenState
             SizedBox(
               height: constraints.maxHeight < 660 ? 660 : constraints.maxHeight,
               child: _buildWorkspace(),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
-              child: PvcReplyGenerator(),
             ),
           ],
         ),
@@ -2272,29 +2266,38 @@ class _EmptyZones extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.add_box_outlined,
-              color: iPhoneColor(context, AppColors.primary),
-              size: 34,
-            ),
-            SizedBox(height: 9),
-            Text(
-              'Choose “+” on a product to create the first material zone.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: iPhoneColor(context, AppColors.textMuted),
-                fontSize: 11.5,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact =
+            constraints.hasBoundedHeight && constraints.maxHeight < 120;
+        return SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(compact ? 8 : 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.add_box_outlined,
+                    color: iPhoneColor(context, AppColors.primary),
+                    size: compact ? 24 : 34,
+                  ),
+                  SizedBox(height: compact ? 4 : 9),
+                  Text(
+                    'Choose “+” on a product to create the first material zone.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: iPhoneColor(context, AppColors.textMuted),
+                      fontSize: compact ? 10 : 11.5,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -2304,29 +2307,38 @@ class _EmptyResults extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.inventory_2_outlined,
-              color: iPhoneColor(context, AppColors.primary),
-              size: 36,
-            ),
-            SizedBox(height: 9),
-            Text(
-              'Quantity results appear here for every selected physical material.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: iPhoneColor(context, AppColors.textMuted),
-                fontSize: 11.5,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact =
+            constraints.hasBoundedHeight && constraints.maxHeight < 120;
+        return SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(compact ? 8 : 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    color: iPhoneColor(context, AppColors.primary),
+                    size: compact ? 26 : 36,
+                  ),
+                  SizedBox(height: compact ? 4 : 9),
+                  Text(
+                    'Quantity results appear here for every selected physical material.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: iPhoneColor(context, AppColors.textMuted),
+                      fontSize: compact ? 10 : 11.5,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

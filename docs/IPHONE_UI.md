@@ -10,7 +10,7 @@ keeps the desktop shell, palette, and Material controls, including narrow window
 | Workflow | Phone presentation |
 | --- | --- |
 | Ceiling calculator | Full-width Room / Products / Results steps; retained input controllers and selected products |
-| PVC calculator | Same three steps; reply generator below results |
+| PVC calculator | Full-width quantity workspace with existing product and pricing controls |
 | Measurement / insulation / LED / wire / decoration / custom | Shared full-width workspace steps |
 | Product catalog | Search, filter strips, lazy lists, wrapping cards, visible edit actions |
 | Prices, packaging, product kinds, formulas | Existing data and edit workflows inside phone-width cards |

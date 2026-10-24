@@ -196,8 +196,9 @@ class _IPhoneShellState extends State<IPhoneShell> {
               items: const [
                 BottomNavigationBarItem(
                   icon: Icon(CupertinoIcons.bubble_left_bubble_right),
-                  label: 'ឆ្លើយតប',
+                  label: 'ពិដាន',
                 ),
+                BottomNavigationBarItem(icon: Icon(CupertinoIcons.layers), label: 'PVC'),
                 BottomNavigationBarItem(icon: Icon(CupertinoIcons.cube_box), label: 'ផលិតផល'),
                 BottomNavigationBarItem(
                   icon: Icon(CupertinoIcons.ellipsis_circle),
@@ -206,18 +207,19 @@ class _IPhoneShellState extends State<IPhoneShell> {
               ],
             ),
             tabBuilder: (context, index) => CupertinoTabView(
-              builder: (context) => index == 2
+              builder: (context) => index == 3
                   ? Material(
                       type: MaterialType.transparency,
-                      child: widget.pages[index + 2],
+                      child: widget.pages[index],
                     )
                   : IPhonePage(
                       title: [
-                        'Facebook Reply',
+                        'គណនាពិដាន',
+                        'គណនា PVC',
                         'ផលិតផល',
                         'បន្ថែម',
                       ][index],
-                      child: widget.pages[index + 2],
+                      child: widget.pages[index],
                     ),
             ),
           ),

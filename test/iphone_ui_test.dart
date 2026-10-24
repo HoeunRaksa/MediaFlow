@@ -64,7 +64,7 @@ void main() {
       final editorContext = tester.element(find.byType(AlertDialog));
       Navigator.of(editorContext).pop();
       await tester.pumpAndSettle();
-      tester.widget<CupertinoTabBar>(find.byType(CupertinoTabBar)).onTap!(4);
+      tester.widget<CupertinoTabBar>(find.byType(CupertinoTabBar)).onTap!(3);
       await tester.pumpAndSettle();
       for (var index = 8; index < SaleDestination.values.length; index++) {
         final tile = find.byType(CupertinoListTile).at(index);
@@ -132,7 +132,7 @@ void main() {
     const Size(932, 430),
   ]) {
     for (final brightness in Brightness.values) {
-      testWidgets('iPhone tabs and calculator steps at $size in $brightness', (
+      testWidgets('iPhone tabs and calculators at $size in $brightness', (
         tester,
       ) async {
         final state = seededAppState();
@@ -161,7 +161,7 @@ void main() {
           findsNothing,
         );
         final scaffold = tester.state(find.byType(CupertinoTabScaffold));
-        // Actual tab taps retain each calculator's state and expose every step.
+        // Each calculator is a complete page; switching tabs must remain error-free.
         for (var tab = 0; tab < 3; tab++) {
           final tabBar = tester.widget<CupertinoTabBar>(
             find.byType(CupertinoTabBar),
@@ -169,21 +169,11 @@ void main() {
           tabBar.onTap!(tab);
           await tester.pump(const Duration(milliseconds: 300));
           expect(scaffold.mounted, isTrue);
-          final segmented = find.byType(CupertinoSlidingSegmentedControl<int>);
-          expect(segmented, findsOneWidget);
-          for (var step = 0; step < 3; step++) {
-            tester
-                .widget<CupertinoSlidingSegmentedControl<int>>(segmented)
-                .onValueChanged(step);
-            await tester.pump(const Duration(milliseconds: 300));
-            expect(tester.takeException(), isNull);
-          }
+          expect(tester.takeException(), isNull);
         }
         tester.widget<CupertinoTabBar>(find.byType(CupertinoTabBar)).onTap!(3);
         await tester.pump(const Duration(milliseconds: 300));
         expect(tester.takeException(), isNull);
-        tester.widget<CupertinoTabBar>(find.byType(CupertinoTabBar)).onTap!(4);
-        await tester.pump(const Duration(milliseconds: 300));
         expect(find.byType(CupertinoListTile), findsWidgets);
         expect(tester.takeException(), isNull);
       });
@@ -203,7 +193,7 @@ void main() {
         MaterialApp(
           home: IPhoneShell(
             pages: [
-              for (var i = 0; i < 4; i++) const SizedBox(),
+              for (var i = 0; i < 3; i++) const SizedBox(),
               IPhoneMenu(
                 entries: [
                   IPhoneMenuEntry(
@@ -214,7 +204,7 @@ void main() {
                 ],
               ),
             ],
-            initialIndex: 4,
+            initialIndex: 3,
           ),
         ),
       );

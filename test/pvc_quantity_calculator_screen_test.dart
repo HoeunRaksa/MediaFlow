@@ -12,30 +12,6 @@ void main() {
     DefaultMaterialSeed.materials(DateTime.utc(2026, 8, 8)),
   );
 
-  testWidgets('PVC reply section is reachable below the existing workspace', (
-    tester,
-  ) async {
-    await _pump(tester, products: products);
-    final price = find.byKey(const ValueKey('pvc-reply-price'));
-    await tester.ensureVisible(price);
-    await tester.pumpAndSettle();
-    await tester.enterText(price, r'$20.X');
-    await tester.pump();
-    expect(
-      tester
-          .widget<SelectableText>(
-            find.byKey(const ValueKey('pvc-reply-preview')),
-          )
-          .data,
-      contains(r'$20.X'),
-    );
-    expect(
-      find.byKey(const ValueKey('pvc-quantity-workspace')),
-      findsOneWidget,
-    );
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets('PVC screen is a simple three-panel quantity workspace', (
     tester,
   ) async {

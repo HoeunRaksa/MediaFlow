@@ -14,8 +14,6 @@ import 'package:material_quote_pro/features/materials/domain/product_sale_engine
 import 'package:material_quote_pro/features/materials/domain/product_sale_models.dart';
 import 'package:material_quote_pro/features/measurement_calculator/domain/models/measurement_models.dart';
 import 'package:provider/provider.dart';
-import '../../domain/ceiling_khmer_replies.dart';
-import '../widgets/ceiling_reply_generator.dart';
 
 class CeilingCalculatorEngine {
   static ProductSaleResult? calculateSingleProduct({
@@ -942,17 +940,8 @@ class _CeilingCalculatorScreenState extends State<CeilingCalculatorScreen> {
                   child: ListView.separated(
                     key: ValueKey('ceiling-result-list'),
                     padding: EdgeInsets.zero,
-                    itemCount: results.length + 3,
+                    itemCount: results.length + 2,
                     itemBuilder: (context, index) {
-                      if (index == results.length + 2) {
-                        return CeilingReplyGenerator(
-                          key: ValueKey('ceiling-reply-generator'),
-                          data: CeilingReplyData(
-                            priceRange: priceRange,
-                            details: customerDetails,
-                          ),
-                        );
-                      }
                       if (index == results.length) {
                         return Container(
                           key: ValueKey('ceiling-wire-result'),
