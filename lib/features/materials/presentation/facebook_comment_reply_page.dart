@@ -7,8 +7,6 @@ import 'package:provider/provider.dart';
 
 import '../../../app_state.dart';
 import '../../../core/ios/iphone_controls.dart';
-import '../../../core/ios/iphone_design.dart';
-import '../../../core/theme/sakura_theme.dart';
 import '../../ceiling_calculator/domain/ceiling_khmer_replies.dart';
 import '../../ceiling_calculator/presentation/screens/ceiling_calculator_screen.dart';
 import '../../pvc_quantity_calculator/data/pvc_physical_catalog.dart';
@@ -73,16 +71,15 @@ class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
   void _randomize() { setState(() { if (_category == 0) { _ceilingReplies.next(); } else { _pvcReplies.next(); } _feedback = null; }); }
 
   @override
-  Widget build(BuildContext context) => IPhonePage(title: 'Facebook Reply', child: ListView(padding: const EdgeInsets.fromLTRB(12, 8, 12, 28), children: [
-    Row(children: [AppBrandLogo(size: 38), const SizedBox(width: 9), const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('សំណើសម្ភារៈ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)), Text('ឆ្លើយតប comment អតិថិជន', style: TextStyle(fontSize: 11, color: Colors.black54))])), IconButton(onPressed: _recalculate, icon: const Icon(Icons.refresh_rounded))]),
-    const SizedBox(height: 8),
+  Widget build(BuildContext context) => ListView(padding: const EdgeInsets.fromLTRB(12, 8, 12, 20), children: [
     Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: const Color(0xFFE8EEF8), borderRadius: BorderRadius.circular(12)), child: CupertinoSlidingSegmentedControl<int>(groupValue: _category, onValueChanged: (v) { if (v != null) setState(() { _category = v; _feedback = null; }); _schedule(); }, children: const {0: Padding(padding: EdgeInsets.symmetric(vertical: 9), child: Text('▰  ពិដាន 60×60')), 1: Padding(padding: EdgeInsets.symmetric(vertical: 9), child: Text('▱  ក្ដារ PVC'))})),
     const SizedBox(height: 12),
-    Wrap(spacing: 8, runSpacing: 8, children: [SizedBox(width: 120, child: AdaptiveTextField(controller: _length, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _category == 0 ? 'បណ្ដោយ (m)' : 'កម្ពស់ (m)'))), SizedBox(width: 120, child: AdaptiveTextField(controller: _width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ទទឹង (m)'))), SizedBox(width: 110, child: AdaptiveTextField(controller: _count, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ចំនួន'))), if (_category == 1) SizedBox(width: 120, child: AdaptiveTextField(controller: _price, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'តម្លៃ / សន្លឹក')))]),
+    Row(children: [Expanded(child: AdaptiveTextField(controller: _length, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _category == 0 ? 'បណ្ដោយ (m)' : 'កម្ពស់ (m)'))), const SizedBox(width: 6), Expanded(child: AdaptiveTextField(controller: _width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ទទឹង (m)'))), const SizedBox(width: 6), SizedBox(width: 82, child: AdaptiveTextField(controller: _count, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ចំនួន')))]),
+    if (_category == 1) ...[const SizedBox(height: 6), AdaptiveTextField(controller: _price, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'តម្លៃ / សន្លឹក'))],
     const SizedBox(height: 8), Row(children: [Expanded(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: const Color(0xFFEAF2FF), borderRadius: BorderRadius.circular(10)), child: Text('ផ្ទៃសរុប\n${_area.toStringAsFixed(2)} m²', style: const TextStyle(color: Color(0xFF163F7A), fontWeight: FontWeight.w800)))), const SizedBox(width: 8), Expanded(child: AdaptiveActionButton.filledIcon(key: const ValueKey('facebook-copy-reply'), onPressed: _lines.isEmpty || _copying ? null : _copy, icon: const Icon(Icons.copy_rounded, size: 18), label: const Text('ចម្លងចម្លើយ')))]),
     if (_feedback != null) Padding(padding: const EdgeInsets.only(top: 6), child: Semantics(liveRegion: true, child: Text(_feedback!))),
     const SizedBox(height: 10), Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFFEAF2FF), borderRadius: BorderRadius.circular(14)), child: SelectableText(_reply.isEmpty ? 'បញ្ចូលទំហំ ដើម្បីបង្កើតចម្លើយ។' : _reply, style: const TextStyle(fontFamily: 'NotoSansKhmer', height: 1.5))),
     const SizedBox(height: 8), Row(mainAxisAlignment: MainAxisAlignment.end, children: [AdaptiveActionButton.outlinedIcon(onPressed: _randomize, icon: const Icon(Icons.shuffle_rounded, size: 18), label: const Text('Randomize'))]),
-    const SizedBox(height: 4), ExpansionTile(title: const Text('☷  បញ្ជីសម្ភារៈ', style: TextStyle(fontWeight: FontWeight.w800)), initiallyExpanded: true, children: [for (final line in _lines) ListTile(dense: true, leading: const Icon(Icons.crop_square_rounded, size: 24, color: Colors.blueGrey), title: Text(line), trailing: const Icon(Icons.chevron_right_rounded))]),
-  ]));
+    const SizedBox(height: 4), ExpansionTile(title: const Text('☷  បញ្ជីសម្ភារៈ', style: TextStyle(fontWeight: FontWeight.w800)), initiallyExpanded: false, children: [for (final line in _lines) ListTile(dense: true, leading: const Icon(Icons.crop_square_rounded, size: 24, color: Colors.blueGrey), title: Text(line), trailing: const Icon(Icons.chevron_right_rounded))]),
+  ]);
 }
