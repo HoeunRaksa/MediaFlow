@@ -9,9 +9,6 @@ import '../../../app_state.dart';
 import '../../../core/ios/iphone_controls.dart';
 import '../../ceiling_calculator/domain/ceiling_khmer_replies.dart';
 import '../../ceiling_calculator/presentation/screens/ceiling_calculator_screen.dart';
-import '../../pvc_quantity_calculator/data/pvc_physical_catalog.dart';
-import '../../pvc_quantity_calculator/domain/pvc_quantity_calculation_service.dart';
-import '../../pvc_quantity_calculator/domain/pvc_quantity_models.dart';
 import '../../pvc_quantity_calculator/domain/pvc_khmer_replies.dart';
 
 /// Compact one-page workflow for answering a Facebook comment quickly.
@@ -52,22 +49,15 @@ class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
       for (final id in ids) { final m = state.materials.where((x) => x.id == id).firstOrNull; if (m == null) continue; final r = CeilingCalculatorEngine.calculateSingleProduct(state: state, material: m, areaM2: _area, templateId: 'ceiling_full_set'); if (r != null) rows.add('${m.khmerName}: ${r.sellQuantity} ${m.unitKhmer}'); }
       _lines = rows;
     } else {
-      final products = const PvcPhysicalCatalog().build(state.materials);
-      final zones = products.map((p) => PvcQuantityZone(id: p.sortOrder, name: p.nameKhmer, product: p, inputMode: p.isLinearAccessory ? PvcZoneInputMode.perimeterStrip : PvcZoneInputMode.dimensions, lengthM: l, widthM: w, stripWidthM: p.widthMm == null ? null : p.widthMm! / 1000)).toList();
-      try {
-        final result = await PvcQuantityCalculationService().calculate(groups: [PvcMeasurementGroup(id: 1, name: 'Facebook', inputMode: PvcGroupInputMode.dimensions, roomCount: n, lengthM: l, widthM: w, zones: zones)]);
-        final price = double.tryParse(_price.text.trim()) ?? 0;
-        final total = result.products.fold<double>(0, (sum, row) => sum + row.quantity * price);
-        _lines = [for (final row in result.products) '${row.product.nameKhmer}: ${row.quantity} ${row.unitLabel}', if (price > 0) 'តម្លៃប៉ាន់ស្មាន៖ \$${total.toStringAsFixed(2)}'];
-      } on UnsupportedError {
-        _lines = const ['PVC exact cutting layout is available in the native calculator.'];
-      }
+      // PVC Facebook replies intentionally reuse the existing price-only
+      // generator. The full PVC construction calculator remains separate.
+      _lines = const [];
     }
     if (mounted) setState(() {});
   }
 
-  String get _reply { final measurement = 'ទំហំ ${_length.text}m × ${_width.text}m ចំនួន ${_count.text} បន្ទប់ (សរុប ${_area.toStringAsFixed(2)}m²)'; return _category == 0 ? _ceilingReplies.render(CeilingReplyData(priceRange: 'តាមការគណនា', details: [measurement, ..._lines])) : ['${_pvcReplies.reply(_price.text).split(' ').first} 🙏', 'ក្ដារ PVC៖ $measurement', ..._lines].join('\n'); }
-  Future<void> _copy() async { if (_copying || _lines.isEmpty) return; setState(() { _copying = true; _feedback = null; }); try { await Clipboard.setData(ClipboardData(text: _reply)); if (mounted) setState(() { if (_category == 0) { _ceilingReplies.next(); } else { _pvcReplies.next(); } _feedback = 'បានចម្លងរួចរាល់ — ចម្លើយថ្មីរួចរាល់'; }); } catch (_) { if (mounted) setState(() => _feedback = 'មិនអាចចម្លងបានទេ'); } finally { if (mounted) setState(() => _copying = false); } }
+  String get _reply { final measurement = 'ទំហំ ${_length.text}m × ${_width.text}m ចំនួន ${_count.text} បន្ទប់ (សរុប ${_area.toStringAsFixed(2)}m²)'; return _category == 0 ? _ceilingReplies.render(CeilingReplyData(priceRange: 'តាមការគណនា', details: [measurement, ..._lines])) : _pvcReplies.reply(_price.text); }
+  Future<void> _copy() async { final canCopy = _category == 0 ? _lines.isNotEmpty : _reply.isNotEmpty; if (_copying || !canCopy) return; setState(() { _copying = true; _feedback = null; }); try { await Clipboard.setData(ClipboardData(text: _reply)); if (mounted) setState(() { if (_category == 0) { _ceilingReplies.next(); } else { _pvcReplies.next(); } _feedback = 'បានចម្លងរួចរាល់ — ចម្លើយថ្មីរួចរាល់'; }); } catch (_) { if (mounted) setState(() => _feedback = 'មិនអាចចម្លងបានទេ'); } finally { if (mounted) setState(() => _copying = false); } }
   void _randomize() { setState(() { if (_category == 0) { _ceilingReplies.next(); } else { _pvcReplies.next(); } _feedback = null; }); }
 
   @override
@@ -76,10 +66,10 @@ class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
     const SizedBox(height: 12),
     Row(children: [Expanded(child: AdaptiveTextField(controller: _length, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _category == 0 ? 'បណ្ដោយ (m)' : 'កម្ពស់ (m)'))), const SizedBox(width: 6), Expanded(child: AdaptiveTextField(controller: _width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ទទឹង (m)'))), const SizedBox(width: 6), SizedBox(width: 82, child: AdaptiveTextField(controller: _count, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ចំនួន')))]),
     if (_category == 1) ...[const SizedBox(height: 6), AdaptiveTextField(controller: _price, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'តម្លៃ / សន្លឹក'))],
-    const SizedBox(height: 8), Row(children: [Expanded(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: const Color(0xFFEAF2FF), borderRadius: BorderRadius.circular(10)), child: Text('ផ្ទៃសរុប\n${_area.toStringAsFixed(2)} m²', style: const TextStyle(color: Color(0xFF163F7A), fontWeight: FontWeight.w800)))), const SizedBox(width: 8), Expanded(child: AdaptiveActionButton.filledIcon(key: const ValueKey('facebook-copy-reply'), onPressed: _lines.isEmpty || _copying ? null : _copy, icon: const Icon(Icons.copy_rounded, size: 18), label: const Text('ចម្លងចម្លើយ')))]),
+    const SizedBox(height: 8), Row(children: [Expanded(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: const Color(0xFFEAF2FF), borderRadius: BorderRadius.circular(10)), child: Text('ផ្ទៃសរុប\n${_area.toStringAsFixed(2)} m²', style: const TextStyle(color: Color(0xFF163F7A), fontWeight: FontWeight.w800)))), const SizedBox(width: 8), Expanded(child: AdaptiveActionButton.filledIcon(key: const ValueKey('facebook-copy-reply'), onPressed: (_category == 0 ? _lines.isEmpty : _reply.isEmpty) || _copying ? null : _copy, icon: const Icon(Icons.copy_rounded, size: 18), label: const Text('ចម្លងចម្លើយ')))]),
     if (_feedback != null) Padding(padding: const EdgeInsets.only(top: 6), child: Semantics(liveRegion: true, child: Text(_feedback!))),
     const SizedBox(height: 10), Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFFEAF2FF), borderRadius: BorderRadius.circular(14)), child: SelectableText(_reply.isEmpty ? 'បញ្ចូលទំហំ ដើម្បីបង្កើតចម្លើយ។' : _reply, style: const TextStyle(fontFamily: 'NotoSansKhmer', height: 1.5))),
     const SizedBox(height: 8), Row(mainAxisAlignment: MainAxisAlignment.end, children: [AdaptiveActionButton.outlinedIcon(onPressed: _randomize, icon: const Icon(Icons.shuffle_rounded, size: 18), label: const Text('Randomize'))]),
-    const SizedBox(height: 4), ExpansionTile(title: const Text('☷  បញ្ជីសម្ភារៈ', style: TextStyle(fontWeight: FontWeight.w800)), initiallyExpanded: false, children: [for (final line in _lines) ListTile(dense: true, leading: const Icon(Icons.crop_square_rounded, size: 24, color: Colors.blueGrey), title: Text(line), trailing: const Icon(Icons.chevron_right_rounded))]),
+    if (_category == 0) ...[const SizedBox(height: 4), ExpansionTile(title: const Text('☷  បញ្ជីសម្ភារៈ', style: TextStyle(fontWeight: FontWeight.w800)), initiallyExpanded: false, children: [for (final line in _lines) ListTile(dense: true, leading: const Icon(Icons.crop_square_rounded, size: 24, color: Colors.blueGrey), title: Text(line), trailing: const Icon(Icons.chevron_right_rounded))])],
   ]);
 }
