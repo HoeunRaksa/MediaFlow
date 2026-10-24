@@ -84,11 +84,11 @@ class _SellingDesktopShellState extends State<SellingDesktopShell> {
     if (isIPhoneLayout(context)) {
       return IPhoneShell(
         initialIndex: switch (widget.initialDestination) {
-          SaleDestination.pvc => 1,
-          SaleDestination.workspace => 4,
-          SaleDestination.products => 3,
-          SaleDestination.appSettings => 4,
-          SaleDestination.facebookReply => 2,
+          SaleDestination.products => 1,
+          SaleDestination.appSettings => 2,
+          SaleDestination.facebookReply => 0,
+          SaleDestination.pvc => 0,
+          SaleDestination.workspace => 2,
           _ => 0,
         },
         pages: [
