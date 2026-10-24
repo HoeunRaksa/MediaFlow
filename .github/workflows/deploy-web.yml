@@ -84,8 +84,11 @@ jobs:
 
           tar -czf build/deployment/mediaflow-web.tar.gz -C build/web .
           scp -i "$HOME/.ssh/mediaflow_deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
-            build/deployment/mediaflow-web.tar.gz deploy/nginx/mediaflow.conf \
-            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/"
+            build/deployment/mediaflow-web.tar.gz \
+            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/mediaflow-web-$GITHUB_SHA.tar.gz"
+          scp -i "$HOME/.ssh/mediaflow_deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            deploy/nginx/mediaflow.conf \
+            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/mediaflow.conf"
 
           ssh -i "$HOME/.ssh/mediaflow_deploy" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             "$DEPLOY_USER@$DEPLOY_HOST" \
