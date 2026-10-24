@@ -21,6 +21,7 @@ class FacebookCommentReplyPage extends StatefulWidget {
 class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
   final _length = TextEditingController(text: '6');
   final _width = TextEditingController(text: '4.2');
+  final _measurement = TextEditingController(text: '6x4.2');
   final _count = TextEditingController(text: '1');
   final _price = TextEditingController();
   final _ceilingReplies = CeilingKhmerReplies();
@@ -29,6 +30,7 @@ class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
   final _ceilingMaterialIds = <String>{
     'ceiling_6mm', 'long_t_3m', 'short_t_06m', 'v_iron_295m',
   };
+  int _ceilingInputMode = 0;
   int _category = 0;
   bool _copying = false;
   String? _feedback;
@@ -37,15 +39,19 @@ class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
   Timer? _debounce;
 
   @override
-  void initState() { super.initState(); for (final c in [_length, _width, _count, _price]) { c.addListener(_schedule); } _schedule(); }
+  void initState() { super.initState(); for (final c in [_length, _width, _measurement, _count, _price]) { c.addListener(_schedule); } _schedule(); }
   @override
-  void dispose() { _debounce?.cancel(); for (final c in [_length, _width, _count, _price]) { c.dispose(); } for (final room in _extraRooms) { room.dispose(); } super.dispose(); }
+  void dispose() { _debounce?.cancel(); for (final c in [_length, _width, _measurement, _count, _price]) { c.dispose(); } for (final room in _extraRooms) { room.dispose(); } super.dispose(); }
   void _schedule() { _debounce?.cancel(); _debounce = Timer(const Duration(milliseconds: 80), _recalculate); }
 
   Future<void> _recalculate() async {
+    final dimension = _parseDimensions(_measurement.text);
     final l = double.tryParse(_length.text) ?? 0, w = double.tryParse(_width.text) ?? 0;
     final n = int.tryParse(_count.text) ?? 0;
-    _area = l * w * n + _extraRooms.fold(0, (sum, room) => sum + room.area);
+    final ceilingArea = _ceilingInputMode == 0
+        ? (dimension?.$1 ?? 0) * (dimension?.$2 ?? 0) * n
+        : (_parseArea(_measurement.text) ?? 0) * n;
+    _area = _category == 0 ? ceilingArea + _extraRooms.fold(0, (sum, room) => sum + room.area) : l * w * n;
     if (_area <= 0 || n <= 0) { if (mounted) setState(() => _lines = const []); return; }
     final state = context.read<AppState>();
     if (_category == 0) {
@@ -61,17 +67,27 @@ class _FacebookCommentReplyPageState extends State<FacebookCommentReplyPage> {
     if (mounted) setState(() {});
   }
 
-  String get _reply { final measurement = 'ទំហំ ${_length.text}m × ${_width.text}m ចំនួន ${_count.text} បន្ទប់ (សរុប ${_area.toStringAsFixed(2)}m²)'; return _category == 0 ? _ceilingReplies.render(CeilingReplyData(priceRange: 'តាមការគណនា', details: [measurement, ..._lines])) : _pvcReplies.reply(_price.text); }
+  String get _reply { final measurement = _category == 0 ? 'ទំហំ ${_measurement.text} ចំនួន ${_count.text} បន្ទប់ (សរុប ${_area.toStringAsFixed(2)}m²)' : 'ទំហំ ${_length.text}m × ${_width.text}m ចំនួន ${_count.text} បន្ទប់ (សរុប ${_area.toStringAsFixed(2)}m²)'; return _category == 0 ? _ceilingReplies.render(CeilingReplyData(priceRange: 'តាមការគណនា', details: [measurement, ..._lines])) : _pvcReplies.reply(_price.text); }
   Future<void> _copy() async { final canCopy = _category == 0 ? _lines.isNotEmpty : _reply.isNotEmpty; if (_copying || !canCopy) return; setState(() { _copying = true; _feedback = null; }); try { await Clipboard.setData(ClipboardData(text: _reply)); if (mounted) setState(() { if (_category == 0) { _ceilingReplies.next(); } else { _pvcReplies.next(); } _feedback = 'បានចម្លងរួចរាល់ — ចម្លើយថ្មីរួចរាល់'; }); } catch (_) { if (mounted) setState(() => _feedback = 'មិនអាចចម្លងបានទេ'); } finally { if (mounted) setState(() => _copying = false); } }
   void _randomize() { setState(() { if (_category == 0) { _ceilingReplies.next(); } else { _pvcReplies.next(); } _feedback = null; }); }
   void _addRoom() { setState(() { final room = _ReplyRoom()..listen(_schedule); _extraRooms.add(room); }); }
   void _removeRoom(int index) { setState(() { _extraRooms.removeAt(index).dispose(); }); _schedule(); }
+  (double, double)? _parseDimensions(String value) {
+    final match = RegExp(r'^\s*([0-9]+(?:[.,][0-9]+)?)\s*[x×*]\s*([0-9]+(?:[.,][0-9]+)?)\s*(?:m)?\s*$', caseSensitive: false).firstMatch(value);
+    if (match == null) return null;
+    return (double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0, double.tryParse(match.group(2)!.replaceAll(',', '.')) ?? 0);
+  }
+  double? _parseArea(String value) => double.tryParse(value.replaceAll(',', '.').replaceAll(RegExp(r'[^0-9.]'), ''));
 
   @override
   Widget build(BuildContext context) => ListView(padding: const EdgeInsets.fromLTRB(12, 8, 12, 20), children: [
     Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: const Color(0xFFE8EEF8), borderRadius: BorderRadius.circular(12)), child: CupertinoSlidingSegmentedControl<int>(groupValue: _category, onValueChanged: (v) { if (v != null) setState(() { _category = v; _feedback = null; }); _schedule(); }, children: const {0: Padding(padding: EdgeInsets.symmetric(vertical: 9), child: Text('▰  ពិដាន 60×60')), 1: Padding(padding: EdgeInsets.symmetric(vertical: 9), child: Text('▱  ក្ដារ PVC'))})),
     const SizedBox(height: 12),
-    Row(children: [Expanded(child: AdaptiveTextField(controller: _length, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: _category == 0 ? 'បណ្ដោយ (m)' : 'កម្ពស់ (m)'))), const SizedBox(width: 6), Expanded(child: AdaptiveTextField(controller: _width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ទទឹង (m)'))), const SizedBox(width: 6), SizedBox(width: 82, child: AdaptiveTextField(controller: _count, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ចំនួន')))]),
+    if (_category == 0) ...[
+      CupertinoSlidingSegmentedControl<int>(groupValue: _ceilingInputMode, onValueChanged: (value) { if (value != null) setState(() => _ceilingInputMode = value); _schedule(); }, children: const {0: Padding(padding: EdgeInsets.symmetric(vertical: 7), child: Text('បណ្ដោយ × ទទឹង')), 1: Padding(padding: EdgeInsets.symmetric(vertical: 7), child: Text('ផ្ទៃផ្ទាល់'))}),
+      const SizedBox(height: 6),
+      Row(children: [Expanded(child: AdaptiveTextField(controller: _measurement, keyboardType: TextInputType.text, decoration: InputDecoration(labelText: _ceilingInputMode == 0 ? 'ទំហំ (ឧ. 6x4.2)' : 'ផ្ទៃ (ឧ. 25.5m²)'))), const SizedBox(width: 6), SizedBox(width: 82, child: AdaptiveTextField(controller: _count, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ចំនួន')))]),
+    ] else Row(children: [Expanded(child: AdaptiveTextField(controller: _length, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'កម្ពស់ (m)'))), const SizedBox(width: 6), Expanded(child: AdaptiveTextField(controller: _width, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ទទឹង (m)'))), const SizedBox(width: 6), SizedBox(width: 82, child: AdaptiveTextField(controller: _count, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ចំនួន')))]),
     if (_category == 0) ...[
       for (var i = 0; i < _extraRooms.length; i++) Padding(
         padding: const EdgeInsets.only(top: 5),
