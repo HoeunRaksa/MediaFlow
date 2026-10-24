@@ -3,6 +3,7 @@ import '../../../../core/ios/iphone_design.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app_state.dart';
@@ -16,10 +17,16 @@ import '../../domain/pvc_quantity_calculation_service.dart';
 import '../../domain/pvc_quantity_models.dart';
 
 class PvcQuantityCalculatorScreen extends StatefulWidget {
-  const PvcQuantityCalculatorScreen({super.key, this.optimizer, this.products});
+  const PvcQuantityCalculatorScreen({
+    super.key,
+    this.optimizer,
+    this.products,
+    this.compactMobile = false,
+  });
 
   final MeasurementOptimizer? optimizer;
   final List<PvcPhysicalProduct>? products;
+  final bool compactMobile;
 
   @override
   State<PvcQuantityCalculatorScreen> createState() =>
@@ -107,6 +114,9 @@ class _PvcQuantityCalculatorScreenState
   @override
   Widget build(BuildContext context) {
     if (!_initialized) return SizedBox.shrink();
+    if (isIPhoneLayout(context) && widget.compactMobile) {
+      return _buildCompactMobileQuote();
+    }
     if (isIPhoneLayout(context)) {
       return IPhoneWorkspace(
         continuous: true,
@@ -127,6 +137,243 @@ class _PvcQuantityCalculatorScreenState
         ),
       ),
     );
+  }
+
+  Widget _buildCompactMobileQuote() {
+    final result = _result;
+    final products = [
+      for (final item in result?.products ?? const <PvcProductQuantityResult>[])
+        if (item.quantity > 0) item,
+    ];
+    final grandTotal = _calculateGrandTotal(products);
+    final quotation = _pvcQuotationText(products, grandTotal);
+    final group = _activeGroup;
+    final model = group.toModel();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _compactPvcCard(
+          title: 'ទំហំ PVC',
+          child: _GroupEditorCard(
+            group: group,
+            groupNumber: _activeGroupIndex + 1,
+            compact: true,
+            canDelete: _groups.length > 1,
+            onChanged: _workspaceChanged,
+            onModeChanged: (mode) {
+              setState(() {
+                group.mode = mode;
+                _syncAutoAccessoryLengths(group);
+              });
+              _scheduleCalculation();
+            },
+            onDelete: () => _removeGroup(_activeGroupIndex),
+          ),
+        ),
+        SizedBox(height: 8),
+        _compactPvcCard(
+          title: 'សរុប និងតម្លៃ',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _WorkspaceTotals(
+                totalArea: model.totalAreaM2,
+                allocatedArea: model.allocatedAreaM2,
+              ),
+              SizedBox(height: 8),
+              if (products.isEmpty)
+                Text(
+                  'សូមបន្ថែមសម្ភារៈក្នុងការកំណត់បន្ថែម',
+                  style: TextStyle(
+                    color: iPhoneColor(context, AppColors.textMuted),
+                    fontSize: 12,
+                  ),
+                )
+              else
+                for (final item in products) ...[
+                  _compactPvcPriceRow(item),
+                  SizedBox(height: 6),
+                ],
+              _compactPvcTotal(grandTotal),
+            ],
+          ),
+        ),
+        SizedBox(height: 8),
+        _compactPvcCard(
+          title: 'សម្រង់តម្លៃ',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                quotation,
+                key: ValueKey('mobile-pvc-quotation'),
+                style: TextStyle(
+                  color: iPhoneColor(context, AppColors.textMain),
+                  fontSize: 12.5,
+                  height: 1.45,
+                ),
+              ),
+              SizedBox(height: 10),
+              FilledButton.icon(
+                key: ValueKey('mobile-pvc-quick-quote-copy'),
+                onPressed: () => _copyQuotation(quotation),
+                icon: Icon(Icons.copy_rounded, size: 18),
+                label: Text('ចម្លងសម្រង់តម្លៃ'),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 4),
+        ExpansionTile(
+          tilePadding: EdgeInsets.symmetric(horizontal: 4),
+          childrenPadding: EdgeInsets.zero,
+          title: Text(
+            'ការកំណត់បន្ថែម',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+          ),
+          children: [
+            SizedBox(height: 520, child: _productsPanel()),
+            SizedBox(height: 600, child: _resultsPanel()),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _compactPvcCard({required String title, required Widget child}) {
+    return AppGlassSurface(
+      padding: EdgeInsets.fromLTRB(12, 10, 12, 11),
+      borderRadius: BorderRadius.circular(16),
+      tint: iPhoneColor(context, AppColors.surfaceGlass),
+      borderColor: iPhoneColor(context, AppColors.glassHighlight),
+      blur: AppEffects.glassBlur,
+      shadows: AppShadows.glassCard,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: iPhoneColor(context, AppColors.primaryText),
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 7),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _compactPvcPriceRow(PvcProductQuantityResult item) {
+    final controller = _priceControllerFor(item.product.id);
+    final price = double.tryParse(controller.text.trim()) ?? 0.0;
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            '${item.product.nameKhmer} · ${item.quantity} ${item.unitLabel}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+          ),
+        ),
+        SizedBox(width: 7),
+        SizedBox(
+          width: 92,
+          height: 44,
+          child: AdaptiveTextField(
+            key: ValueKey('mobile-pvc-price-${item.product.id}'),
+            controller: controller,
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              prefixText: r'$ ',
+              suffixText: '/${item.unitLabel}',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 7, vertical: 7),
+            ),
+          ),
+        ),
+        SizedBox(width: 7),
+        SizedBox(
+          width: 70,
+          child: Text(
+            MoneyFormatter.money(item.quantity * price),
+            textAlign: TextAlign.right,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _compactPvcTotal(double total) {
+    return Container(
+      key: ValueKey('mobile-pvc-total'),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        color: iPhoneColor(context, AppColors.successBg),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(
+          color: iPhoneColor(context, AppColors.successBorder),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'សរុបអតិថិជនបង់',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+            ),
+          ),
+          Text(
+            MoneyFormatter.money(total),
+            style: TextStyle(
+              color: iPhoneColor(context, AppColors.successText),
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _pvcQuotationText(
+    List<PvcProductQuantityResult> products,
+    double total,
+  ) {
+    final area = _groups.fold<double>(
+      0,
+      (sum, group) => sum + group.toModel().totalAreaM2,
+    );
+    final lines = <String>[
+      'បាទបង 🙏',
+      'សម្រង់ក្ដារ PVC',
+      '📐 ផ្ទៃសរុប៖ ${_number(area)}m²',
+      for (final item in products)
+        if (item.quantity > 0)
+          '• ${item.product.nameKhmer}៖ ${item.quantity} ${item.unitLabel}',
+      'សរុបតម្លៃ៖ ${MoneyFormatter.money(total)}',
+    ];
+    return lines.join('\n');
+  }
+
+  Future<void> _copyQuotation(String quotation) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: quotation));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('បានចម្លងសម្រង់តម្លៃ')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('មិនអាចចម្លងបាន សូមព្យាយាមម្ដងទៀត')),
+      );
+    }
   }
 
   Widget _buildWorkspace() {
@@ -884,6 +1131,7 @@ class _GroupEditorCard extends StatelessWidget {
   const _GroupEditorCard({
     required this.group,
     required this.groupNumber,
+    this.compact = false,
     required this.canDelete,
     required this.onChanged,
     required this.onModeChanged,
@@ -892,6 +1140,7 @@ class _GroupEditorCard extends StatelessWidget {
 
   final _EditableGroup group;
   final int groupNumber;
+  final bool compact;
   final bool canDelete;
   final VoidCallback onChanged;
   final ValueChanged<PvcGroupInputMode> onModeChanged;
@@ -953,7 +1202,7 @@ class _GroupEditorCard extends StatelessWidget {
                     child: _NumberField(
                       key: ValueKey('pvc-group-length-${group.id}'),
                       controller: group.length,
-                      label: 'Length',
+                      label: compact ? 'L' : 'Length',
                       suffix: 'm',
                       onChanged: onChanged,
                     ),
@@ -963,7 +1212,7 @@ class _GroupEditorCard extends StatelessWidget {
                     child: _NumberField(
                       key: ValueKey('pvc-group-width-${group.id}'),
                       controller: group.width,
-                      label: 'Width',
+                      label: compact ? 'W' : 'Width',
                       suffix: 'm',
                       onChanged: onChanged,
                     ),
@@ -974,7 +1223,7 @@ class _GroupEditorCard extends StatelessWidget {
               _NumberField(
                 key: ValueKey('pvc-group-area-${group.id}'),
                 controller: group.area,
-                label: 'Area per room',
+                label: compact ? 'Area' : 'Area per room',
                 suffix: 'm²',
                 onChanged: onChanged,
               ),
@@ -985,8 +1234,8 @@ class _GroupEditorCard extends StatelessWidget {
                   child: _NumberField(
                     key: ValueKey('pvc-group-count-${group.id}'),
                     controller: group.count,
-                    label: 'Identical rooms',
-                    suffix: 'rooms',
+                    label: compact ? 'Rooms' : 'Identical rooms',
+                    suffix: compact ? '' : 'rooms',
                     integer: true,
                     onChanged: onChanged,
                   ),

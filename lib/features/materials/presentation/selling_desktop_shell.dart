@@ -23,6 +23,7 @@ import '../data/models/packaging_rule.dart';
 import '../data/models/product_type_template.dart';
 import '../data/models/unit_of_measure.dart';
 import '../domain/product_sale_models.dart';
+import 'mobile_quick_quote_screen.dart';
 
 const _sidebar = AppColors.sidebar;
 const _surface = AppColors.surface;
@@ -82,15 +83,17 @@ class _SellingDesktopShellState extends State<SellingDesktopShell> {
     if (isIPhoneLayout(context)) {
       return IPhoneShell(
         initialIndex: switch (widget.initialDestination) {
-          SaleDestination.pvc => 1,
-          SaleDestination.products => 2,
-          SaleDestination.appSettings => 3,
-          SaleDestination.workspace => 3,
+          SaleDestination.products => 1,
+          SaleDestination.appSettings => 2,
+          SaleDestination.workspace => 2,
           _ => 0,
         },
         pages: [
-          _body(SaleDestination.ceiling),
-          _body(SaleDestination.pvc),
+          MobileQuickQuoteScreen(
+            initialProduct: widget.initialDestination == SaleDestination.pvc
+                ? QuickQuoteProduct.pvc
+                : QuickQuoteProduct.ceiling,
+          ),
           _body(SaleDestination.products),
           IPhoneMenu(
             entries: [

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:material_quote_pro/core/ios/iphone_design.dart';
 import 'package:material_quote_pro/features/materials/presentation/selling_desktop_shell.dart';
+import 'package:material_quote_pro/features/materials/presentation/mobile_quick_quote_screen.dart';
 import 'package:material_quote_pro/app_state.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
@@ -64,7 +65,7 @@ void main() {
       final editorContext = tester.element(find.byType(AlertDialog));
       Navigator.of(editorContext).pop();
       await tester.pumpAndSettle();
-      tester.widget<CupertinoTabBar>(find.byType(CupertinoTabBar)).onTap!(3);
+      tester.widget<CupertinoTabBar>(find.byType(CupertinoTabBar)).onTap!(2);
       await tester.pumpAndSettle();
       for (var index = 8; index < SaleDestination.values.length; index++) {
         final tile = find.byType(CupertinoListTile).at(index);
@@ -162,7 +163,7 @@ void main() {
         );
         final scaffold = tester.state(find.byType(CupertinoTabScaffold));
         // Each calculator is a complete page; switching tabs must remain error-free.
-        for (var tab = 0; tab < 3; tab++) {
+        for (var tab = 0; tab < 2; tab++) {
           final tabBar = tester.widget<CupertinoTabBar>(
             find.byType(CupertinoTabBar),
           );
@@ -171,7 +172,7 @@ void main() {
           expect(scaffold.mounted, isTrue);
           expect(tester.takeException(), isNull);
         }
-        tester.widget<CupertinoTabBar>(find.byType(CupertinoTabBar)).onTap!(3);
+        tester.widget<CupertinoTabBar>(find.byType(CupertinoTabBar)).onTap!(2);
         await tester.pump(const Duration(milliseconds: 300));
         expect(tester.takeException(), isNull);
         expect(find.byType(CupertinoListTile), findsWidgets);
@@ -193,7 +194,7 @@ void main() {
         MaterialApp(
           home: IPhoneShell(
             pages: [
-              for (var i = 0; i < 3; i++) const SizedBox(),
+              for (var i = 0; i < 2; i++) const SizedBox(),
               IPhoneMenu(
                 entries: [
                   IPhoneMenuEntry(
@@ -204,7 +205,7 @@ void main() {
                 ],
               ),
             ],
-            initialIndex: 3,
+            initialIndex: 2,
           ),
         ),
       );
@@ -215,6 +216,49 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Settings detail'), findsOneWidget);
       expect(find.text('Detail page'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'quick quote switches products while keeping compact calculators',
+    (tester) async {
+      final state = seededAppState();
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(430, 932);
+      addTearDown(() {
+        state.dispose();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      await tester.pumpWidget(
+        ChangeNotifierProvider<AppState>.value(
+          value: state,
+          child: const MaterialApp(home: MobileQuickQuoteScreen()),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        find.byKey(const ValueKey('mobile-ceiling-quotation')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('mobile-ceiling-quick-quote-copy')),
+        findsOneWidget,
+      );
+      expect(find.text('25.2 m²'), findsWidgets);
+
+      await tester.tap(find.text('ក្ដារ PVC'));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        find.byKey(const ValueKey('mobile-pvc-quotation')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('mobile-pvc-quick-quote-copy')),
+        findsOneWidget,
+      );
+      expect(find.text('ទំហំ PVC'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     },
   );
 }

@@ -61,7 +61,11 @@ enum CeilingCategoryTab {
 }
 
 class CeilingCalculatorScreen extends StatefulWidget {
-  const CeilingCalculatorScreen({super.key});
+  const CeilingCalculatorScreen({super.key, this.compactMobile = false});
+
+  /// Phone-only presentation used by the Quick Quote shell. The calculation
+  /// state and all engines remain owned by this screen.
+  final bool compactMobile;
 
   @override
   State<CeilingCalculatorScreen> createState() =>
@@ -275,6 +279,10 @@ class _CeilingCalculatorScreenState extends State<CeilingCalculatorScreen> {
     final results = _calculateResults(state);
     final extraVResult = _calculateExtraV(results);
 
+    if (isIPhoneLayout(context) && widget.compactMobile) {
+      return _buildCompactMobileQuote(state, products, results, extraVResult);
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: LayoutBuilder(
@@ -335,6 +343,206 @@ class _CeilingCalculatorScreenState extends State<CeilingCalculatorScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildCompactMobileQuote(
+    AppState state,
+    List<MaterialItem> products,
+    List<ProductSaleResult> results,
+    CeilingVExtraResult? extraVResult,
+  ) {
+    final quotation = _customerQuotationText(results, extraVResult);
+    final wire = CeilingWire.forArea(_grandTotalAreaM2);
+    final customerTotal = _totalSellingAmount + wire.price;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _mobileQuoteCard(
+          title: 'ទំហំ និងចំនួនបន្ទប់',
+          child: _compactRoomInputs(),
+        ),
+        SizedBox(height: 8),
+        _CeilingCompactSellingSection(
+          priceController: _temporarySellPriceController,
+          totalAreaM2: _grandTotalAreaM2,
+          totalSellingAmount: customerTotal,
+          totalLabel: 'សរុបអតិថិជនបង់',
+        ),
+        SizedBox(height: 8),
+        _mobileQuoteCard(
+          title: 'សម្រង់តម្លៃ',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                quotation,
+                key: ValueKey('mobile-ceiling-quotation'),
+                style: TextStyle(
+                  color: iPhoneColor(context, _text),
+                  fontSize: 12.5,
+                  height: 1.45,
+                ),
+              ),
+              SizedBox(height: 10),
+              FilledButton.icon(
+                key: ValueKey('mobile-ceiling-quick-quote-copy'),
+                onPressed: () => _copyQuotation(quotation),
+                icon: Icon(Icons.copy_rounded, size: 18),
+                label: Text('ចម្លងសម្រង់តម្លៃ'),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 4),
+        ExpansionTile(
+          tilePadding: EdgeInsets.symmetric(horizontal: 4),
+          childrenPadding: EdgeInsets.zero,
+          title: Text(
+            'ការកំណត់បន្ថែម',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+          ),
+          children: [
+            SizedBox(height: 520, child: _productsPanel(state, products)),
+            SizedBox(height: 600, child: _resultPanel(results, extraVResult)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _compactRoomInputs() {
+    final activeGroup =
+        _roomGroups[_activeGroupIndex.clamp(0, _roomGroups.length - 1)];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 38,
+          child: _HorizontalStrip(
+            controller: _groupsScroll,
+            compact: true,
+            children: [
+              for (var index = 0; index < _roomGroups.length; index++)
+                _WorkspaceTab(
+                  label: _roomGroups[index].tabLabel,
+                  selected: index == _activeGroupIndex,
+                  onTap: () => setState(() => _activeGroupIndex = index),
+                  onClose: _roomGroups.length > 1
+                      ? () => _removeGroup(index)
+                      : null,
+                ),
+              _AddTab(label: '+', onTap: () => _addGroup()),
+            ],
+          ),
+        ),
+        SizedBox(height: 6),
+        _RoomModeToggle(
+          groupId: activeGroup.id,
+          mode: activeGroup.mode,
+          onChanged: (mode) => setState(() => activeGroup.mode = mode),
+        ),
+        SizedBox(height: 7),
+        if (activeGroup.mode == MeasurementRoomMode.dimensions)
+          Row(
+            children: [
+              Expanded(
+                child: _RoomDimensionField(
+                  label: 'បណ្ដោយ',
+                  controller: activeGroup.length,
+                ),
+              ),
+              SizedBox(width: 7),
+              Expanded(
+                child: _RoomDimensionField(
+                  label: 'ទទឹង',
+                  controller: activeGroup.width,
+                ),
+              ),
+            ],
+          )
+        else
+          _RoomDimensionField(
+            label: 'ផ្ទៃក្នុង 1 បន្ទប់',
+            controller: activeGroup.area,
+            suffix: 'm²',
+          ),
+        SizedBox(height: 7),
+        Row(
+          children: [
+            Expanded(child: _CompactLabel('ចំនួនបន្ទប់')),
+            SizedBox(
+              width: 150,
+              child: _RoomCountControl(
+                groupId: activeGroup.id,
+                controller: activeGroup.count,
+                value: activeGroup.countValue,
+                onDecrement: activeGroup.countValue > 1
+                    ? () {
+                        activeGroup.count.text = (activeGroup.countValue - 1)
+                            .toString();
+                        setState(() {});
+                      }
+                    : null,
+                onIncrement: () {
+                  activeGroup.count.text = (activeGroup.countValue + 1)
+                      .toString();
+                  setState(() {});
+                },
+                onNormalize: activeGroup.normalizeCount,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 7),
+        _RoomMetricRow(
+          label: 'ផ្ទៃសរុប',
+          value: '${_format(_grandTotalAreaM2)} m²',
+          valueKey: ValueKey('mobile-ceiling-total-area'),
+          emphasized: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _mobileQuoteCard({required String title, required Widget child}) {
+    return AppGlassSurface(
+      padding: EdgeInsets.fromLTRB(12, 10, 12, 11),
+      borderRadius: BorderRadius.circular(16),
+      tint: iPhoneColor(context, _card),
+      borderColor: iPhoneColor(context, AppColors.glassHighlight),
+      blur: AppEffects.glassBlur,
+      shadows: AppShadows.glassCard,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: iPhoneColor(context, _primary),
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 7),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Future<void> _copyQuotation(String quotation) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: quotation));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('បានចម្លងសម្រង់តម្លៃ')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('មិនអាចចម្លងបាន សូមព្យាយាមម្ដងទៀត')),
+      );
+    }
   }
 
   Widget _measurementPanel() {
@@ -753,54 +961,11 @@ class _CeilingCalculatorScreenState extends State<CeilingCalculatorScreen> {
     CeilingVExtraResult? extraVResult,
   ) {
     final wire = CeilingWire.forArea(_grandTotalAreaM2);
-    final customerTotal = _totalSellingAmount + wire.price;
-    final materialLines = [
-      for (final result in results)
-        switch (result.materialId) {
-          'ceiling_6mm' =>
-            '• ពិដាន៖ ${result.sellQuantity} ${result.unitKhmer}',
-          'long_t_3m' =>
-            '• T វែង 3m៖ ${result.sellQuantity} ${result.unitKhmer}',
-          'short_t_06m' =>
-            '• T ខ្លី 0.6m៖ ${result.sellQuantity} ${result.unitKhmer}',
-          'v_iron_295m' =>
-            '• V 2.95m៖ ${result.sellQuantity} ${result.unitKhmer}',
-          _ =>
-            '• ${result.materialNameKhmer} ${result.spec}៖ ${result.sellQuantity} ${result.unitKhmer}',
-        },
-      if (extraVResult != null) '• V បន្ថែម៖ ${extraVResult.extraVToBuy} ដើម',
-      if (wire.lengthM > 0) '• លួស៖ ${wire.lengthM}m',
-    ];
-    final phoneLines = _contactPhones.text
-        .split(RegExp(r'[\n,;]+'))
-        .map((phone) => phone.trim())
-        .where((phone) => phone.isNotEmpty)
-        .map((phone) => '📞 $phone');
-    final priceRange =
-        '${MoneyFormatter.money(customerTotal)} – ${MoneyFormatter.money((customerTotal * 1.05).ceilToDouble())}';
-    final customerDetails = [
-      '📐 ផ្ទៃពិដាន៖ ${_format(_grandTotalAreaM2)}m²',
-      for (var index = 0; index < _roomGroups.length; index++)
-        if (_roomGroups[index].mode == MeasurementRoomMode.dimensions)
-          '${_roomGroups.length > 1 ? 'ទំហំបន្ទប់ ${index + 1}' : 'ទំហំ'}៖ ${_roomGroups[index].lengthText}m × ${_roomGroups[index].widthText}m${_roomGroups[index].countValue > 1 ? ' × ${_roomGroups[index].countValue} បន្ទប់' : ''}'
-        else
-          '${_roomGroups.length > 1 ? 'ទំហំបន្ទប់ ${index + 1}' : 'ទំហំ'}៖ ${_format(_roomGroups[index].areaPerRoomM2)}m²${_roomGroups[index].countValue > 1 ? ' × ${_roomGroups[index].countValue} បន្ទប់' : ''}',
-      ...materialLines,
-      ...phoneLines,
-      if (_contactTelegram.text.trim().isNotEmpty)
-        'Telegram៖ ${_contactTelegram.text.trim()}',
-    ];
-    final customerText = [
-      'បាទបង 🙏',
-      'តម្លៃសរុបប្រហែល',
-      priceRange,
-      ...customerDetails,
-    ].join('\n');
+    final customerText = _customerQuotationText(results, extraVResult);
     final activeGroup =
         _roomGroups[_activeGroupIndex.clamp(0, _roomGroups.length - 1)];
     final roomDimensionsText =
         '${activeGroup.lengthText}m × ${activeGroup.widthText}m';
-
     return _WorkspacePanel(
       key: ValueKey('ceiling-result-panel'),
       title: 'បរិមាណសរុប: ពិដាន',
@@ -1073,6 +1238,58 @@ class _CeilingCalculatorScreenState extends State<CeilingCalculatorScreen> {
         ],
       ),
     );
+  }
+
+  String _customerQuotationText(
+    List<ProductSaleResult> results,
+    CeilingVExtraResult? extraVResult,
+  ) {
+    final wire = CeilingWire.forArea(_grandTotalAreaM2);
+    final customerTotal = _totalSellingAmount + wire.price;
+    final materialLines = [
+      for (final result in results)
+        if (result.sellQuantity > 0)
+          switch (result.materialId) {
+            'ceiling_6mm' =>
+              '• ពិដាន៖ ${result.sellQuantity} ${result.unitKhmer}',
+            'long_t_3m' =>
+              '• T វែង 3m៖ ${result.sellQuantity} ${result.unitKhmer}',
+            'short_t_06m' =>
+              '• T ខ្លី 0.6m៖ ${result.sellQuantity} ${result.unitKhmer}',
+            'v_iron_295m' =>
+              '• V 2.95m៖ ${result.sellQuantity} ${result.unitKhmer}',
+            _ =>
+              '• ${result.materialNameKhmer} ${result.spec}៖ ${result.sellQuantity} ${result.unitKhmer}',
+          },
+      if (extraVResult != null && extraVResult.extraVToBuy > 0)
+        '• V បន្ថែម៖ ${extraVResult.extraVToBuy} ដើម',
+      if (wire.lengthM > 0) '• លួស៖ ${wire.lengthM}m',
+    ];
+    final phoneLines = _contactPhones.text
+        .split(RegExp(r'[\n,;]+'))
+        .map((phone) => phone.trim())
+        .where((phone) => phone.isNotEmpty)
+        .map((phone) => '📞 $phone');
+    final priceRange =
+        '${MoneyFormatter.money(customerTotal)} – ${MoneyFormatter.money((customerTotal * 1.05).ceilToDouble())}';
+    final customerDetails = [
+      '📐 ផ្ទៃពិដាន៖ ${_format(_grandTotalAreaM2)}m²',
+      for (var index = 0; index < _roomGroups.length; index++)
+        if (_roomGroups[index].mode == MeasurementRoomMode.dimensions)
+          '${_roomGroups.length > 1 ? 'ទំហំបន្ទប់ ${index + 1}' : 'ទំហំ'}៖ ${_roomGroups[index].lengthText}m × ${_roomGroups[index].widthText}m${_roomGroups[index].countValue > 1 ? ' × ${_roomGroups[index].countValue} បន្ទប់' : ''}'
+        else
+          '${_roomGroups.length > 1 ? 'ទំហំបន្ទប់ ${index + 1}' : 'ទំហំ'}៖ ${_format(_roomGroups[index].areaPerRoomM2)}m²${_roomGroups[index].countValue > 1 ? ' × ${_roomGroups[index].countValue} បន្ទប់' : ''}',
+      ...materialLines,
+      ...phoneLines,
+      if (_contactTelegram.text.trim().isNotEmpty)
+        'Telegram៖ ${_contactTelegram.text.trim()}',
+    ];
+    return [
+      'បាទបង 🙏',
+      'តម្លៃសរុបប្រហែល',
+      priceRange,
+      ...customerDetails,
+    ].join('\n');
   }
 
   String _productLabel(AppState state, String id) {
@@ -1985,11 +2202,13 @@ class _CeilingCompactSellingSection extends StatelessWidget {
     required this.priceController,
     required this.totalAreaM2,
     required this.totalSellingAmount,
+    this.totalLabel = 'សរុបតម្លៃលក់',
   });
 
   final TextEditingController priceController;
   final double totalAreaM2;
   final double totalSellingAmount;
+  final String totalLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -2101,7 +2320,7 @@ class _CeilingCompactSellingSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'សរុបតម្លៃលក់',
+                  totalLabel,
                   style: TextStyle(
                     color: iPhoneColor(context, _text),
                     fontSize: 13,

@@ -196,11 +196,7 @@ class _IPhoneShellState extends State<IPhoneShell> {
               items: const [
                 BottomNavigationBarItem(
                   icon: Icon(CupertinoIcons.bubble_left_bubble_right),
-                  label: 'ពិដាន',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(CupertinoIcons.layers),
-                  label: 'PVC',
+                  label: 'សម្រង់',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(CupertinoIcons.cube_box),
@@ -213,18 +209,13 @@ class _IPhoneShellState extends State<IPhoneShell> {
               ],
             ),
             tabBuilder: (context, index) => CupertinoTabView(
-              builder: (context) => index == 3
+              builder: (context) => index == 2
                   ? Material(
                       type: MaterialType.transparency,
                       child: widget.pages[index],
                     )
                   : IPhonePage(
-                      title: [
-                        'គណនាពិដាន',
-                        'គណនា PVC',
-                        'ផលិតផល',
-                        'បន្ថែម',
-                      ][index],
+                      title: ['សម្រង់តម្លៃ', 'ផលិតផល', 'បន្ថែម'][index],
                       child: widget.pages[index],
                     ),
             ),
