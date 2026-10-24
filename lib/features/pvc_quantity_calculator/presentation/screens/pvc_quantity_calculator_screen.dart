@@ -2,6 +2,7 @@ import '../../../../core/ios/iphone_controls.dart';
 import '../../../../core/ios/iphone_design.dart';
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -23,11 +24,13 @@ class PvcQuantityCalculatorScreen extends StatefulWidget {
     this.optimizer,
     this.products,
     this.compactMobile = false,
+    this.simpleAreaEstimates = kIsWeb,
   });
 
   final MeasurementOptimizer? optimizer;
   final List<PvcPhysicalProduct>? products;
   final bool compactMobile;
+  final bool simpleAreaEstimates;
 
   @override
   State<PvcQuantityCalculatorScreen> createState() =>
@@ -120,7 +123,10 @@ class _PvcQuantityCalculatorScreenState
       _products = const PvcPhysicalCatalog().build(state.materials);
       _options = state.measurementOptions;
     }
-    _service = PvcQuantityCalculationService(optimizer: widget.optimizer);
+    _service = PvcQuantityCalculationService(
+      optimizer: widget.optimizer,
+      simpleAreaEstimates: widget.simpleAreaEstimates,
+    );
     _groups.add(_EditableGroup(id: _nextGroupId++, length: '6', width: '4.2'));
   }
 
@@ -178,6 +184,8 @@ class _PvcQuantityCalculatorScreenState
       for (final item in result?.products ?? const <PvcProductQuantityResult>[])
         ...item.notices,
     ];
+    final hasAreaEstimate =
+        result?.products.any((item) => item.isAreaEstimate) ?? false;
     final grandTotal = _calculateGrandTotal(products);
     final quotation = _pvcQuotationText(products, grandTotal);
     final group = _activeGroup;
@@ -206,7 +214,9 @@ class _PvcQuantityCalculatorScreenState
         ),
         SizedBox(height: 8),
         _compactPvcCard(
-          title: 'សរុប និងតម្លៃ',
+          title: hasAreaEstimate
+              ? 'សរុប និងតម្លៃ · ប៉ាន់ស្មាន'
+              : 'សរុប និងតម្លៃ',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -407,6 +417,8 @@ class _PvcQuantityCalculatorScreenState
       'បាទបង 🙏',
       'សម្រង់ក្ដារ PVC',
       '📐 ផ្ទៃសរុប៖ ${_number(area)}m²',
+      if (products.any((item) => item.isAreaEstimate))
+        'ℹ️ បរិមាណសន្លឹក៖ ប៉ាន់ស្មានតាមផ្ទៃ អាចមានសំណល់បន្ថែម',
       for (final item in products)
         if (item.quantity > 0)
           '• ${item.product.nameKhmer}៖ ${item.quantitySummary} · ${MoneyFormatter.money(item.billableQuantity * (double.tryParse(_priceControllers[item.product.id]?.text.trim() ?? '') ?? 0.0))}',
@@ -2164,6 +2176,11 @@ class _ProductResultCard extends StatelessWidget {
             _ResultMetric(
               icon: Icons.square_foot_rounded,
               text: 'Assigned: ${_number(result.assignedAreaM2)} m²',
+            ),
+          if (result.isAreaEstimate)
+            _ResultMetric(
+              icon: Icons.info_outline_rounded,
+              text: 'ប៉ាន់ស្មានតាមផ្ទៃសន្លឹក (អាចត្រូវការសំណល់បន្ថែម)',
             ),
           if (result.product.calculationUnit ==
                   PvcProductCalculationUnit.linear &&

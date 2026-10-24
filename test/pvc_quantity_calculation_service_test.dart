@@ -328,6 +328,46 @@ void main() {
     );
 
     test(
+      'simple area estimates use total dimensions without native cutting optimization',
+      () async {
+        final optimizer = _ExactOptimizer();
+        final areaService = PvcQuantityCalculationService(
+          optimizer: optimizer,
+          simpleAreaEstimates: true,
+        );
+        final result = await areaService.calculate(
+          groups: [
+            PvcMeasurementGroup(
+              id: 1,
+              name: '7x7 room',
+              inputMode: PvcGroupInputMode.dimensions,
+              lengthM: 7,
+              widthM: 7,
+              roomCount: 1,
+              zones: [
+                PvcQuantityZone(
+                  id: 1,
+                  name: 'PVC sheets',
+                  product: product('K 3m'),
+                  inputMode: PvcZoneInputMode.dimensions,
+                  lengthM: 7,
+                  widthM: 7,
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final sheets = result.products.single;
+        expect(sheets.assignedAreaM2, 49);
+        expect(sheets.quantity, 41); // 49 m² / 1.2 m² per sheet, rounded up.
+        expect(sheets.isAreaEstimate, isTrue);
+        expect(sheets.notices, isEmpty);
+        expect(optimizer.lastRequest, isNull);
+      },
+    );
+
+    test(
       'calculates C-Line pieces and full boxes from actual room layout',
       () async {
         Future<PvcProductQuantityResult> calculate(

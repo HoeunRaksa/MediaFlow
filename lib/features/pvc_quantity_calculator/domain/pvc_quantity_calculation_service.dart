@@ -5,10 +5,19 @@ import '../../measurement_calculator/native/measurement_native_api.dart';
 import 'pvc_quantity_models.dart';
 
 class PvcQuantityCalculationService {
-  PvcQuantityCalculationService({MeasurementOptimizer? optimizer})
-    : _optimizer = optimizer ?? const MeasurementNativeApi();
+  PvcQuantityCalculationService({
+    MeasurementOptimizer? optimizer,
+    this.simpleAreaEstimates = false,
+  }) : _optimizer = optimizer ?? const MeasurementNativeApi();
 
   final MeasurementOptimizer _optimizer;
+
+  /// Uses total area and raw product coverage for automatic panel quantities.
+  ///
+  /// This is enabled by the Flutter Web screen because the native cutting
+  /// optimizer is not available/reliable in that browser calculation mode.
+  /// Windows keeps the existing optimizer-backed behavior by default.
+  final bool simpleAreaEstimates;
 
   Future<PvcQuantityWorkspaceResult> calculate({
     required List<PvcMeasurementGroup> groups,
@@ -277,6 +286,19 @@ class PvcQuantityCalculationService {
         notice: 'Enter an assigned area or dimensions greater than 0.',
       );
     }
+
+    if (simpleAreaEstimates) {
+      return _result(
+        group,
+        zone,
+        quantity: _piecesFor(assignedAreaPerRoom, coverage) * group.roomCount,
+        unitLabel: unitLabel,
+        assignedArea: assignedArea,
+        requiredLinear: requiredLinear,
+        method: '${_number(coverage)} m² per sheet · area estimate',
+      );
+    }
+
     if (zone.inputMode != PvcZoneInputMode.dimensions) {
       return _result(
         group,

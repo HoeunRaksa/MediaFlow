@@ -433,6 +433,9 @@ class PvcProductQuantityResult {
   /// presenting a zero quantity for an item that could not be calculated.
   List<String> get notices =>
       zones.map((zone) => zone.notice).whereType<String>().toList();
+
+  bool get isAreaEstimate =>
+      zones.any((zone) => zone.methodLabel.contains('area estimate'));
 }
 
 class PvcQuantityWorkspaceResult {
