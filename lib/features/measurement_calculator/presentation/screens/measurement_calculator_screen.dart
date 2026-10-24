@@ -112,6 +112,11 @@ class _MeasurementCalculatorScreenState
           if (isIPhoneLayout(context)) {
             return IPhoneWorkspace(
               panels: [_measurementPanel(), _productsPanel(), _resultPanel()],
+              tabLabels: [
+                'បន្ទប់',
+                'សម្ភារៈ (${_workspace.selections.length})',
+                'លទ្ធផល',
+              ],
             );
           }
           if (constraints.maxWidth >= 1240) {

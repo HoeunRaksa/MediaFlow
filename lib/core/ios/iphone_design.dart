@@ -265,9 +265,15 @@ class IPhonePage extends StatelessWidget {
 
 /// One full-width workspace step at a time; no desktop canvas or horizontal pan.
 class IPhoneWorkspace extends StatefulWidget {
-  const IPhoneWorkspace({super.key, required this.panels, this.footer});
+  const IPhoneWorkspace({
+    super.key,
+    required this.panels,
+    this.footer,
+    this.tabLabels,
+  });
   final List<Widget> panels;
   final Widget? footer;
+  final List<String>? tabLabels;
   @override
   State<IPhoneWorkspace> createState() => _IPhoneWorkspaceState();
 }
@@ -292,7 +298,7 @@ class _IPhoneWorkspaceState extends State<IPhoneWorkspace> {
               0: Padding(
                 padding: EdgeInsets.symmetric(vertical: 10),
                 child: Text(
-                  'ទំហំ',
+                  widget.tabLabels?[0] ?? 'ទំហំ',
                   style: TextStyle(
                     fontSize: 14,
                     fontFamily: 'NotoSansKhmer',
@@ -304,7 +310,7 @@ class _IPhoneWorkspaceState extends State<IPhoneWorkspace> {
               1: Padding(
                 padding: EdgeInsets.symmetric(vertical: 10),
                 child: Text(
-                  'ផលិតផល',
+                  widget.tabLabels?[1] ?? 'ផលិតផល',
                   style: TextStyle(
                     fontSize: 14,
                     fontFamily: 'NotoSansKhmer',
@@ -316,7 +322,7 @@ class _IPhoneWorkspaceState extends State<IPhoneWorkspace> {
               2: Padding(
                 padding: EdgeInsets.symmetric(vertical: 10),
                 child: Text(
-                  'លទ្ធផល',
+                  widget.tabLabels?[2] ?? 'លទ្ធផល',
                   style: TextStyle(
                     fontSize: 14,
                     fontFamily: 'NotoSansKhmer',
@@ -345,6 +351,37 @@ class _IPhoneWorkspaceState extends State<IPhoneWorkspace> {
                         ? 640
                         : constraints.maxHeight - 20,
                     child: IndexedStack(index: _step, children: widget.panels),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Row(
+                      children: [
+                        if (_step > 0)
+                          Expanded(
+                            child: CupertinoButton.tinted(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              onPressed: () {
+                                FocusManager.instance.primaryFocus?.unfocus();
+                                setState(() => _step--);
+                              },
+                              child: const Text('ត្រឡប់'),
+                            ),
+                          ),
+                        if (_step > 0 && _step < widget.panels.length - 1)
+                          const SizedBox(width: 10),
+                        if (_step < widget.panels.length - 1)
+                          Expanded(
+                            child: CupertinoButton.filled(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              onPressed: () {
+                                FocusManager.instance.primaryFocus?.unfocus();
+                                setState(() => _step++);
+                              },
+                              child: const Text('បន្ទាប់'),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                   if (_step == 2 && widget.footer != null) widget.footer!,
                 ],
